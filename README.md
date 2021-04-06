@@ -3,10 +3,15 @@
 Offline note taking app
 
 ## Implemented features
-none
+- basic note keeper: - create a new note
+                     - edit title and content of a new/existing note
+                     - swipe to delete any notes
+                     - hold to reorder notes
+- search notes (based on text)                    
 
 ## TODO
-- (!) implement basic note keeper (save title and content)
-- search notes
+- implement drawer
 - delete/undo functionality
 - pin and label notes
+- change background color of individual notes
+- implement a list system (create a list when making a new note)
