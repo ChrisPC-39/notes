@@ -6,6 +6,7 @@ import 'package:share/share.dart';
 import '../database/note.dart';
 import '../style/decoration.dart' as style;
 import '../database/labels.dart';
+import 'label_page.dart';
 
 class EditPage extends StatefulWidget {
   final Note note;
@@ -127,7 +128,9 @@ class _EditPageState extends State<EditPage> {
         return AlertDialog(
           title: Text("Select a label", style: style.customStyle(22)),
           backgroundColor: Color(0xFF424242),
-          content: _buildLabelListView(),
+          content: Hive.box("label").length == 0
+              ? Text("You have no labels yet", style: style.customStyle(16))
+              : _buildLabelListView(),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
