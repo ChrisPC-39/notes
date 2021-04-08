@@ -7,11 +7,11 @@ Offline note taking app
                      - edit title and content of a new/existing note
                      - swipe to delete any notes
                      - hold to reorder notes
-- search notes (based on text)                    
+- search notes (based on text)            
+- implement drawer   
+- delete/undo functionality (partially)     
+- label notes
 
 ## TODO
-- implement drawer
-- delete/undo functionality
-- pin and label notes
 - change background color of individual notes
 - implement a list system (create a list when making a new note)
