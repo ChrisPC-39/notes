@@ -1,6 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../style/decoration.dart' as style;
 import '../database/labels.dart';
@@ -13,6 +15,10 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> {
+  static const _privacyPolicyURL = 'https://github.com/ChrisPC-39/Privacy-and-TOS/blob/main/Privacy-Policy.txt';
+  static const _githubURL = "https://github.com/ChrisPC-39/notes";
+  static const _googlePlayURL = "https://play.google.com/store/apps/details?id=com.notes.exo";
+
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -20,11 +26,13 @@ class _DrawerPageState extends State<DrawerPage> {
       child: Drawer(
         child: ListView(
           children: [
-            _buildTitle("NOTES"),
+            _buildTitle("Handy notes"),
             _buildLabelTitle(Icons.label_rounded, "Labels"),
             _buildLabelListView(),
             _buildAddLabel(),
-            Divider(thickness: 1, color: Colors.white)
+            Divider(thickness: 1, color: Colors.white),
+            _buildListTile(Icons.privacy_tip_outlined, "Privacy and Policy", _privacyPolicyURL),
+            _buildListTile(Icons.call_split_rounded, "Github link", _githubURL)
           ]
         )
       )
@@ -33,14 +41,27 @@ class _DrawerPageState extends State<DrawerPage> {
 
   Widget _buildTitle(String title) {
     return ListTile(
-      title: Text(title, style: style.customStyle(25, fontWeight: "bold"))
+      leading: Icon(Icons.notes_rounded, color: Colors.white, size: 25),
+      title: RichText(
+        text: TextSpan(
+          text: title,
+          style: style.customStyle(20, fontWeight: "bold"),
+          recognizer: TapGestureRecognizer()..onTap = () => launch(_googlePlayURL)
+        )
+      )
     );
   }
 
-  Widget _buildListTile(IconData icon, String text) {
+  Widget _buildListTile(IconData icon, String text, String url) {
     return ListTile(
       leading: Icon(icon, size: 30, color: Colors.white),
-      title: Text(text, style: style.customStyle(20))
+      title: RichText(
+        text: TextSpan(
+          text: text,
+          style: style.customStyle(20),
+          recognizer: TapGestureRecognizer()..onTap = () => launch(url)
+        )
+      )
     );
   }
 

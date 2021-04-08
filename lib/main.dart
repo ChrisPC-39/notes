@@ -16,9 +16,6 @@ Future<void> main() async {
 
   await Hive.openBox("label");
 
-  // await Hive.openBox("note");
-  // Hive.box("note").deleteFromDisk();
-
   runApp(MaterialApp(home: MyApp(), debugShowCheckedModeBanner: false));
 }
 
