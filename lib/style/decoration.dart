@@ -38,7 +38,7 @@ BoxDecoration containerDecoration() {
   );
 }
 
-TextStyle customStyle(double size, [String fontWeight = "normal", Color color = Colors.white]) {
+TextStyle customStyle(double size, {String fontWeight = "normal", Color color = Colors.white}) {
   return TextStyle(
     fontSize: size,
     fontWeight: fontWeight == "bold" ? FontWeight.bold : FontWeight.normal,

@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../style/decoration.dart' as style;
 import '../database/note.dart';
+import 'drawer_page.dart';
 import 'edit_page.dart';
 
 class MainPage extends StatefulWidget {
@@ -17,6 +18,7 @@ class _MainPageState extends State<MainPage> {
   TextEditingController textController = TextEditingController();
   FocusNode focusNode;
   String input = "";
+  Note deletedNote;
 
   @override
   void initState() {
@@ -80,7 +82,7 @@ class _MainPageState extends State<MainPage> {
         onTap: () => focusNode.unfocus(),
         child: Scaffold(
           backgroundColor: Color(0xFF424242),
-          //drawer: DrawerPage(),
+          drawer: DrawerPage(),
           floatingActionButton: _buildFloatingWidget(),
           body: Column(
             children: [
@@ -161,7 +163,26 @@ class _MainPageState extends State<MainPage> {
       key: UniqueKey(),
       child: _buildOpenContainer(index),
       onDismissed: (direction) {
+        deletedNote = Hive.box("note").getAt(index) as Note;
         setState(() { Hive.box("note").deleteAt(index); });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Note deleted", style: style.customStyle(15)),
+                TextButton(
+                  child: Text("UNDO", style: style.customStyle(15, color: Colors.yellow[400])),
+                  onPressed: () {
+                    addItem(deletedNote);
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  }
+                )
+              ]
+            )
+          )
+        );
       }
     );
   }
@@ -187,6 +208,7 @@ class _MainPageState extends State<MainPage> {
 
   Widget _buildNotePreview(Note note) {
     return Container(
+      constraints: BoxConstraints(minHeight: 50),
       padding: EdgeInsets.all(10),
       margin: EdgeInsets.fromLTRB(10, 5, 10, 5),
       decoration: style.containerDecoration(),
@@ -196,7 +218,7 @@ class _MainPageState extends State<MainPage> {
             visible: note.title != "",
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(note.title, style: style.customStyle(20, "bold"))
+              child: Text(note.title, style: style.customStyle(20, fontWeight: "bold"))
             )
           ),
 
