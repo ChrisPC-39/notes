@@ -154,7 +154,7 @@ class _MainPageState extends State<MainPage> {
       child: Row(
         children: [
           AnimatedContainer(
-            duration: Duration(seconds: 1),
+            duration: Duration(milliseconds: 500),
             curve: Curves.fastOutSlowIn,
             width: searchBarWidth,
             child: TextField(
@@ -219,7 +219,7 @@ class _MainPageState extends State<MainPage> {
       visible: i == 0,
       child: GestureDetector(
         child: Container(
-          margin: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.3),
+          margin: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.3, bottom: 5),
           child: Row(
             children: [
               Icon(Icons.add_rounded, size: 25, color: Colors.yellow[400]),
@@ -267,6 +267,7 @@ class _MainPageState extends State<MainPage> {
         deletedNote = Hive.box("note").getAt(index) as Note;
         setState(() { Hive.box("note").deleteAt(index); });
 
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -312,35 +313,37 @@ class _MainPageState extends State<MainPage> {
       constraints: BoxConstraints(minHeight: 50),
       padding: EdgeInsets.all(10),
       margin: EdgeInsets.fromLTRB(10, 5, 10, 5),
-      decoration: style.containerDecoration(10),
+      decoration: style.containerDecoration(10, Colors.grey[400]),
       child: Column(
         children: [
-          Visibility(
-            visible: note.label != "",
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                decoration: style.containerDecoration(20, Colors.grey[600]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Visibility(
+                visible: note.title != "",
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
-                  child: Text(note.label, style: style.customStyle(15))
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text(note.title, style: style.customStyle(20, fontWeight: "bold")),
+                )
+              ),
+
+              Visibility(
+                visible: note.label != "",
+                child: Container(
+                  decoration: style.containerDecoration(20, Colors.grey[600]),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
+                    child: Text(note.label, style: style.customStyle(15))
+                  )
                 )
               )
-            )
+            ]
           ),
-
-          Visibility(visible: note.label != "", child: Container(height: 5)),
 
           Visibility(
-            visible: note.title != "",
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(note.title, style: style.customStyle(20, fontWeight: "bold"))
-            )
+            visible: note.title != "" && note.content != "",
+            child: Divider(thickness: 1, color: Colors.grey[400])
           ),
-
-          //Used for spacing
-          Visibility(visible: note.title != "", child: Container(height: 5)),
 
           Visibility(
             visible: note.content != "",

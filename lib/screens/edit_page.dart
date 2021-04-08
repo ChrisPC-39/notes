@@ -29,6 +29,7 @@ class _EditPageState extends State<EditPage> {
   void initState() {
     titleController.text = widget.note.title;
     contentController.text = widget.note.content;
+    widget.note.label != "" ? radioIndex = findRadioIndex() : radioIndex = -1;
 
     saveContent(contentController.text);
 
@@ -44,6 +45,18 @@ class _EditPageState extends State<EditPage> {
     titleFocusNode.dispose();
 
     super.dispose();
+  }
+
+  int findRadioIndex() {
+    final labelBox = Hive.box("label");
+
+    for(int i = 0; i < labelBox.length; i++) {
+      final label = labelBox.getAt(i) as Label;
+
+      if(label.label == widget.note.label) return i;
+    }
+
+    return -1;
   }
 
   void saveContent(String value) {
@@ -102,28 +115,45 @@ class _EditPageState extends State<EditPage> {
 
   void _shareAction() {
     Share.share(
-      "${widget.note.title}\n"
-      "${widget.note.content}"
+      "${titleController.text}\n"
+      "${contentController.text}"
     );
   }
 
-  /*Instead of having 2 functions for saveTitle and saveContent
-  * I made this function that should work, but for some reason it doesn't...
-  * If you edit the title and then click on the content to write something there,
-  * the title will revert back to original for some reason. The same happens if
-  * you are editing the content and switching to title. :(
-
-  void saveNote(String value, String type) {
-    final noteBox = Hive.box("note");
-    final note = noteBox.getAt(widget.index) as Note;
-
-    noteBox.putAt(widget.index, Note(
-        type == "title" ? value : widget.note.title,
-        type != "title" ? value : widget.note.content,
-        note.isEditing)
+  void _addLabelAction() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Select a label", style: style.customStyle(22)),
+          backgroundColor: Color(0xFF424242),
+          content: _buildLabelListView(),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: style.customStyle(18, color: Colors.blue))
+            )
+          ]
+        );
+      }
     );
   }
-  */
+
+  void _removeLabelAction() {
+    if(widget.note.label != "") {
+      final newNote = Note(titleController.text, contentController.text, widget.note.isEditing, "");
+
+      Hive.box("note").putAt(widget.index, newNote);
+
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, anim1, anim2) => EditPage(newNote, widget.index),
+          transitionDuration: Duration(seconds: 0)
+        )
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +166,8 @@ class _EditPageState extends State<EditPage> {
             children: [
               _buildTopBar(),
               Divider(thickness: 1, color: Colors.white),
-              _buildContent()
+              _buildContent(),
+              _buildLabel()
             ]
           )
         )
@@ -151,7 +182,7 @@ class _EditPageState extends State<EditPage> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           _buildBackButton(),
-          SizedBox(width: 10), //This is for padding
+          SizedBox(width: 15), //This is for padding
           _buildTitle(),
           _buildOptions()
         ]
@@ -215,7 +246,8 @@ class _EditPageState extends State<EditPage> {
         _buildPopupMenuItem(2, Icons.undo_rounded, "Revert to original"),
         _buildPopupMenuItem(3, Icons.copy_rounded, "Duplicate"),
         _buildPopupMenuItem(4, Icons.share_rounded, "Share"),
-        _buildPopupMenuItem(5, Icons.label_rounded, "Label")
+        _buildPopupMenuItem(5, Icons.label_rounded, "Label"),
+        _buildPopupMenuItem(6, Icons.label_off_rounded, "Remove label")
       ],
       onSelected: (value) {
         switch(value) {
@@ -232,29 +264,13 @@ class _EditPageState extends State<EditPage> {
             _shareAction();
             break;
           case 5:
-            _labelAction();
+            _addLabelAction();
+            break;
+          case 6:
+            _removeLabelAction();
             break;
           default: break;
         }
-      }
-    );
-  }
-
-  void _labelAction() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Select a label", style: style.customStyle(22)),
-          backgroundColor: Color(0xFF424242),
-          content: _buildLabelListView(),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: style.customStyle(18, color: Colors.blue))
-            )
-          ]
-        );
       }
     );
   }
@@ -283,13 +299,26 @@ class _EditPageState extends State<EditPage> {
       toggleable: true,
       groupValue: radioIndex,
       activeColor: Colors.white,
+      selectedTileColor: Colors.white,
       onChanged: (value) => setState(() {
         radioIndex = value;
-        Hive.box("note").putAt(
-          widget.index,
-          Note(widget.note.title, widget.note.content, widget.note.isEditing, label.label)
-        );
         Navigator.pop(context);
+
+        final newNote = Note(titleController.text, contentController.text, widget.note.isEditing, label.label);
+        Hive.box("note").putAt(widget.index, newNote);
+
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, anim1, anim2) => EditPage(newNote, widget.index),
+            transitionDuration: Duration(seconds: 0)
+          )
+        );
+        // Hive.box("note").putAt(
+        //   widget.index,
+        //   Note(widget.note.title, widget.note.content, widget.note.isEditing, label.label)
+        // );
+
       })
     );
   }
@@ -312,12 +341,29 @@ class _EditPageState extends State<EditPage> {
       margin: EdgeInsets.only(top: 10),
       child: TextField(
         maxLines: null,
-        style: TextStyle(color: Colors.white),
+        style: TextStyle(color: Colors.white, fontSize: 20),
         focusNode: contentFocusNode,
         controller: contentController,
         onChanged: (String value) { saveContent(value); },
         decoration: style.editPageDecoration(false, "Note")
       )
+    );
+  }
+
+  Widget _buildLabel() {
+    return Visibility(
+      visible: widget.note.label != "",
+      child: Align(
+        alignment: Alignment.bottomLeft,
+        child: Container(
+          margin: EdgeInsets.only(left: 10),
+          decoration: style.containerDecoration(20, Colors.grey[600]),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
+            child: Text(widget.note.label, style: style.customStyle(18))
+          )
+        ),
+      ),
     );
   }
 }

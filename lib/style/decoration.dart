@@ -24,14 +24,14 @@ InputDecoration editPageDecoration(bool isDense, [String labelText = ""]) {
   );
 }
 
-InputDecoration addLabelDecoration() {
+InputDecoration addLabelDecoration(String labelText) {
   return InputDecoration(
     filled: true,
     fillColor: Colors.grey[700],
     enabledBorder: outlineBorder(),
     focusedBorder: outlineBorder(),
 
-    labelText: "Add a new label",
+    labelText: labelText,
     labelStyle: TextStyle(color: Colors.white)
   );
 }

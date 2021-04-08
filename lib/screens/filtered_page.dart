@@ -117,9 +117,9 @@ class _FilteredPageState extends State<FilteredPage> {
 
                 //Refresh the current page
                 Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => FilteredPage(Label(input), widget.index))
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => FilteredPage(Label(input), widget.index))
                 );
               },
               child: Text("Update", style: style.customStyle(18, color: Colors.blue))
@@ -184,7 +184,7 @@ class _FilteredPageState extends State<FilteredPage> {
       child: Row(
         children: [
           _buildBackButton(),
-          SizedBox(width: 5),
+          SizedBox(width: 15),
           _buildTitle(),
           _buildOptions()
         ]

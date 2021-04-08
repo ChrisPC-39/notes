@@ -15,8 +15,9 @@ Future<void> main() async {
   Hive.registerAdapter(LabelAdapter());
 
   await Hive.openBox("label");
-  //Hive.box("label").add(Label("test"));
-  // print(Hive.box("label").length);
+
+  // await Hive.openBox("note");
+  // Hive.box("note").deleteFromDisk();
 
   runApp(MaterialApp(home: MyApp(), debugShowCheckedModeBanner: false));
 }

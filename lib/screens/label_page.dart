@@ -63,6 +63,7 @@ class _LabelPageState extends State<LabelPage> {
     if(input == "") text = "An error occurred:\nThe new label name is empty";
     else text = "An error occurred:\nThe new label name overlaps with an existing label";
 
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             duration: Duration(seconds: 7),
@@ -90,14 +91,17 @@ class _LabelPageState extends State<LabelPage> {
       setState(() { addNewLabel = false; });
     }
     return SafeArea(
-      child: Scaffold(
-        backgroundColor: Color(0xFF424242),
-        body: Column(
-          children: [
-            _buildTopBar(),
-            _buildListView()
-          ]
-        )
+      child: GestureDetector(
+        onTap: () => focusNode.unfocus(),
+        child: Scaffold(
+          backgroundColor: Color(0xFF424242),
+          body: Column(
+            children: [
+              _buildTopBar(),
+              _buildListView()
+            ]
+          )
+        ),
       )
     );
   }
@@ -114,64 +118,78 @@ class _LabelPageState extends State<LabelPage> {
       padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
       child: Row(
         children: [
-          GestureDetector(
-            child: Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 30),
-            onTap: () => Navigator.pop(context)
-          ),
+          _buildBackButton(),
+          SizedBox(width: 10),
+          _buildSearchBar(),
+          _buildAddButton(),
+          _buildCancelButton()
+        ]
+      )
+    );
+  }
 
-          AnimatedContainer(
-            duration: Duration(seconds: 1),
-            curve: Curves.fastOutSlowIn,
-            width: searchBarWidth,
-            child: TextField(
-              style: TextStyle(color: Colors.white),
-              focusNode: focusNode,
-              controller: textController,
-              decoration: style.addLabelDecoration(),
-              onChanged: (String value) {
-                setState(() { input = value.toLowerCase(); });
-              }
-            )
-          ),
+  _buildBackButton() {
+    return GestureDetector(
+      child: Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 30),
+      onTap: () => Navigator.pop(context)
+    );
+  }
 
-          Visibility(
-            visible: isTextFieldFocused(),
-            child: Expanded(
-              child: Center(
-                child: Container(
-                  child: GestureDetector(
-                    child: Text("Add", style: style.customStyle(16, color: Colors.blue[400]), maxLines: 1),
-                    onTap: () => setState(() {
-                      if(_isLabelCorrect())
-                        addLabel(Label(input));
-                      else _throwIncorrectNameErr();
+  _buildSearchBar() {
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 500),
+      curve: Curves.fastOutSlowIn,
+      width: searchBarWidth,
+      child: TextField(
+        style: TextStyle(color: Colors.white),
+        focusNode: focusNode,
+        controller: textController,
+        decoration: style.addLabelDecoration("Search or add a new label"),
+        onChanged: (String value) {
+          setState(() { input = value.toLowerCase(); });
+        }
+      )
+    );
+  }
 
-                      textController.text = "";
-                      input = "";
-                      focusNode.unfocus();
-                    })
-                  )
-                )
-              )
-            )
-          ),
+  Widget _buildAddButton() {
+    return Visibility(
+      visible: isTextFieldFocused(),
+      child: Expanded(
+        child: Center(
+          child: Container(
+            child: GestureDetector(
+              child: Text("Add", style: style.customStyle(16, color: Colors.blue[400]), maxLines: 1),
+              onTap: () => setState(() {
+                if(_isLabelCorrect())
+                  addLabel(Label(input));
+                else _throwIncorrectNameErr();
 
-          Visibility(
-            visible: isTextFieldFocused(),
-            child: Expanded(
-              child: Container(
-                child: GestureDetector(
-                  child: Text("Cancel", style: style.customStyle(16, color: Colors.blue[400]), maxLines: 1),
-                  onTap: () => setState(() {
-                    textController.text = "";
-                    input = "";
-                    focusNode.unfocus();
-                  })
-                )
-              )
+                textController.text = "";
+                input = "";
+                focusNode.unfocus();
+              })
             )
           )
-        ]
+        )
+      )
+    );
+  }
+
+  Widget _buildCancelButton() {
+    return Visibility(
+      visible: isTextFieldFocused(),
+      child: Expanded(
+        child: Container(
+          child: GestureDetector(
+            child: Text("Cancel", style: style.customStyle(16, color: Colors.blue[400]), maxLines: 1),
+            onTap: () => setState(() {
+              textController.text = "";
+              input = "";
+              focusNode.unfocus();
+            })
+          )
+        )
       )
     );
   }
@@ -185,7 +203,11 @@ class _LabelPageState extends State<LabelPage> {
             physics: BouncingScrollPhysics(),
             itemCount: Hive.box("label").length,
             itemBuilder: (context, index) {
-              return _buildOpenContainer(index);
+              final label = Hive.box("label").getAt(index) as Label;
+
+              return label.label.contains(input)
+                ? _buildOpenContainer(index)
+                : Container();
             }
           );
         }
