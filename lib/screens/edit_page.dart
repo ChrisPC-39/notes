@@ -41,8 +41,8 @@ class _EditPageState extends State<EditPage> {
 
   @override
   void dispose() {
-    contentFocusNode.dispose();
-    titleFocusNode.dispose();
+    // contentFocusNode.dispose();
+    // titleFocusNode.dispose();
 
     super.dispose();
   }
@@ -223,7 +223,8 @@ class _EditPageState extends State<EditPage> {
             focusNode: titleFocusNode,
             controller: titleController,
             onChanged: (String value) { saveTitle(value); },
-            decoration: style.editPageDecoration(true)
+            decoration: style.editPageDecoration(true),
+            textCapitalization: TextCapitalization.sentences,
           )
           : Container(
             margin: EdgeInsets.fromLTRB(0, 10, 0, 10),
@@ -314,11 +315,6 @@ class _EditPageState extends State<EditPage> {
             transitionDuration: Duration(seconds: 0)
           )
         );
-        // Hive.box("note").putAt(
-        //   widget.index,
-        //   Note(widget.note.title, widget.note.content, widget.note.isEditing, label.label)
-        // );
-
       })
     );
   }
@@ -341,6 +337,7 @@ class _EditPageState extends State<EditPage> {
       margin: EdgeInsets.only(top: 10),
       child: TextField(
         maxLines: null,
+        textCapitalization: TextCapitalization.sentences,
         style: TextStyle(color: Colors.white, fontSize: 20),
         focusNode: contentFocusNode,
         controller: contentController,

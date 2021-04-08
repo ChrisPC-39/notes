@@ -118,8 +118,10 @@ class _FilteredPageState extends State<FilteredPage> {
                 //Refresh the current page
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => FilteredPage(Label(input), widget.index))
+                  PageRouteBuilder(
+                    pageBuilder: (context, anim1, anim2) => FilteredPage(Label(input), widget.index),
+                    transitionDuration: Duration(seconds: 0)
+                  )
                 );
               },
               child: Text("Update", style: style.customStyle(18, color: Colors.blue))
@@ -291,32 +293,32 @@ class _FilteredPageState extends State<FilteredPage> {
       decoration: style.containerDecoration(10),
       child: Column(
         children: [
-          Visibility(
-            visible: note.label != "",
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                decoration: style.containerDecoration(20, Colors.grey[600]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Visibility(
+                visible: note.title != "",
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
-                  child: Text(note.label, style: style.customStyle(15))
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text(note.title, style: style.customStyle(20, fontWeight: "bold")),
+                )
+              ),
+
+              Visibility(
+                visible: note.label != "",
+                child: Container(
+                  decoration: style.containerDecoration(20, Colors.grey[600]),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
+                    child: Text(note.label, style: style.customStyle(15))
+                  )
                 )
               )
-            )
-          ),
-
-          Visibility(visible: note.label != "", child: Container(height: 5)),
-
-          Visibility(
-            visible: note.title != "",
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(note.title, style: style.customStyle(20, fontWeight: "bold"))
-            )
+            ]
           ),
 
           //Used for spacing
-          Visibility(visible: note.title != "", child: Container(height: 5)),
+          Visibility(visible: note.title != "", child: Divider(thickness: 1, color: Colors.white,)),
 
           Visibility(
             visible: note.content != "",

@@ -34,12 +34,12 @@ class _LabelPageState extends State<LabelPage> {
     super.initState();
   }
 
-  @override
-  void dispose() {
-    focusNode.dispose();
-
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   focusNode.dispose();
+  //
+  //   super.dispose();
+  // }
 
   bool isTextFieldFocused() {
     return focusNode.hasFocus;
@@ -146,7 +146,7 @@ class _LabelPageState extends State<LabelPage> {
         controller: textController,
         decoration: style.addLabelDecoration("Search or add a new label"),
         onChanged: (String value) {
-          setState(() { input = value.toLowerCase(); });
+          setState(() { input = value; });
         }
       )
     );
@@ -205,7 +205,7 @@ class _LabelPageState extends State<LabelPage> {
             itemBuilder: (context, index) {
               final label = Hive.box("label").getAt(index) as Label;
 
-              return label.label.contains(input)
+              return label.label.contains(input.toLowerCase())
                 ? _buildOpenContainer(index)
                 : Container();
             }
