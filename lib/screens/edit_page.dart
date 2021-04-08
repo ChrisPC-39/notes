@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:notes/database/labels.dart';
 import 'package:share/share.dart';
 
 import '../database/note.dart';
 import '../style/decoration.dart' as style;
+import '../database/labels.dart';
 
 class EditPage extends StatefulWidget {
   final Note note;
@@ -16,7 +18,7 @@ class EditPage extends StatefulWidget {
 }
 
 class _EditPageState extends State<EditPage> {
-  int _checkboxValue;
+  int radioIndex = -1;
   bool editTitle = false;
   FocusNode titleFocusNode;
   FocusNode contentFocusNode;
@@ -27,6 +29,8 @@ class _EditPageState extends State<EditPage> {
   void initState() {
     titleController.text = widget.note.title;
     contentController.text = widget.note.content;
+
+    saveContent(contentController.text);
 
     titleFocusNode = FocusNode();
     contentFocusNode = FocusNode();
@@ -46,18 +50,18 @@ class _EditPageState extends State<EditPage> {
     final notesBox = Hive.box("note");
     final note = notesBox.getAt(widget.index) as Note;
 
-    notesBox.putAt(widget.index, Note(note.title, value, note.isEditing));
+    notesBox.putAt(widget.index, Note(note.title, value, note.isEditing, note.label));
   }
 
   void saveTitle(String value) {
     final notesBox = Hive.box("note");
     final note = notesBox.getAt(widget.index) as Note;
 
-    notesBox.putAt(widget.index, Note(value, note.content, note.isEditing));
+    notesBox.putAt(widget.index, Note(value, note.content, note.isEditing, note.label));
   }
 
   void addItem(Note newNote) {
-    Hive.box("note").add(Note("", "", false));
+    Hive.box("note").add(Note("", "", false, ""));
     final noteBox = Hive.box("note");
 
     for(int i = Hive.box("note").length - 1; i >= 1 ; i--) {
@@ -66,6 +70,41 @@ class _EditPageState extends State<EditPage> {
     }
 
     Hive.box("note").putAt(0, newNote);
+  }
+
+  void _deleteAction() {
+    Navigator.pop(context);
+
+    Future.delayed(Duration(milliseconds: 200), () {
+      Hive.box("note").deleteAt(widget.index);
+    });
+  }
+
+  void _undoAction() {
+    titleController.text = widget.note.title;
+    contentController.text = widget.note.content;
+
+    Hive.box("note").putAt(
+      widget.index,
+      Note(widget.note.title, widget.note.content, widget.note.isEditing, widget.note.label)
+    );
+    setState(() {});
+  }
+
+  void _duplicateAction() {
+    addItem(Note(
+      titleController.text,
+      contentController.text,
+      false,
+      ""
+    ));
+  }
+
+  void _shareAction() {
+    Share.share(
+      "${widget.note.title}\n"
+      "${widget.note.content}"
+    );
   }
 
   /*Instead of having 2 functions for saveTitle and saveContent
@@ -96,7 +135,7 @@ class _EditPageState extends State<EditPage> {
           body: Column(
             children: [
               _buildTopBar(),
-              Divider(thickness: 1),
+              Divider(thickness: 1, color: Colors.white),
               _buildContent()
             ]
           )
@@ -172,25 +211,11 @@ class _EditPageState extends State<EditPage> {
       elevation: 0,
       color: Colors.grey[700],
       itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 1,
-          child: Text("Delete", style: style.customStyle(18))
-        ),
-
-        PopupMenuItem(
-          value: 2,
-          child: Text("Undo changes", style: style.customStyle(18))
-        ),
-
-        PopupMenuItem(
-          value: 3,
-          child: Text("Duplicate", style: style.customStyle(18))
-        ),
-
-        PopupMenuItem(
-          value: 4,
-          child: Text("Share", style: style.customStyle(18))
-        )
+        _buildPopupMenuItem(1, Icons.delete_rounded, "Delete"),
+        _buildPopupMenuItem(2, Icons.undo_rounded, "Revert to original"),
+        _buildPopupMenuItem(3, Icons.copy_rounded, "Duplicate"),
+        _buildPopupMenuItem(4, Icons.share_rounded, "Share"),
+        _buildPopupMenuItem(5, Icons.label_rounded, "Label")
       ],
       onSelected: (value) {
         switch(value) {
@@ -206,43 +231,79 @@ class _EditPageState extends State<EditPage> {
           case 4:
             _shareAction();
             break;
+          case 5:
+            _labelAction();
+            break;
           default: break;
         }
       }
     );
   }
 
-  void _deleteAction() {
-    Navigator.pop(context);
-
-    Future.delayed(Duration(milliseconds: 200), () {
-      Hive.box("note").deleteAt(widget.index);
-    });
-  }
-
-  void _undoAction() {
-    titleController.text = widget.note.title;
-    contentController.text = widget.note.content;
-
-    Hive.box("note").putAt(
-      widget.index,
-      Note(widget.note.title, widget.note.content, widget.note.isEditing)
+  void _labelAction() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Select a label", style: style.customStyle(22)),
+          backgroundColor: Color(0xFF424242),
+          content: _buildLabelListView(),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: style.customStyle(18, color: Colors.blue))
+            )
+          ]
+        );
+      }
     );
-    setState(() {});
   }
 
-  void _duplicateAction() {
-    addItem(Note(
-      titleController.text,
-      contentController.text,
-      false
-    ));
+  Widget _buildLabelListView() {
+    return Container(
+      width: 200,
+      height: 200,
+      child: ListView.builder(
+        physics: BouncingScrollPhysics(),
+        itemCount: Hive.box("label").length,
+        itemBuilder: (context, index) {
+          return _buildSelectableLabel(index);
+        }
+      ),
+    );
   }
 
-  void _shareAction() {
-    Share.share(
-      "${widget.note.title}\n"
-      "${widget.note.content}"
+  Widget _buildSelectableLabel(int i) {
+    final labelBox = Hive.box("label");
+    final label = labelBox.getAt(i) as Label;
+
+    return RadioListTile(
+      title: Text(label.label, style: style.customStyle(16)),
+      value: i,
+      toggleable: true,
+      groupValue: radioIndex,
+      activeColor: Colors.white,
+      onChanged: (value) => setState(() {
+        radioIndex = value;
+        Hive.box("note").putAt(
+          widget.index,
+          Note(widget.note.title, widget.note.content, widget.note.isEditing, label.label)
+        );
+        Navigator.pop(context);
+      })
+    );
+  }
+
+  PopupMenuItem _buildPopupMenuItem(int i, IconData icon, String text) {
+    return PopupMenuItem(
+      value: i,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.white),
+          SizedBox(width: 10),
+          Text(text, style: style.customStyle(18))
+        ]
+      )
     );
   }
 

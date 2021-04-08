@@ -24,6 +24,18 @@ InputDecoration editPageDecoration(bool isDense, [String labelText = ""]) {
   );
 }
 
+InputDecoration addLabelDecoration() {
+  return InputDecoration(
+    filled: true,
+    fillColor: Colors.grey[700],
+    enabledBorder: outlineBorder(),
+    focusedBorder: outlineBorder(),
+
+    labelText: "Add a new label",
+    labelStyle: TextStyle(color: Colors.white)
+  );
+}
+
 OutlineInputBorder outlineBorder() {
   return OutlineInputBorder(
     borderSide: BorderSide(color: Colors.transparent),
@@ -31,10 +43,10 @@ OutlineInputBorder outlineBorder() {
   );
 }
 
-BoxDecoration containerDecoration() {
+BoxDecoration containerDecoration(double radius, [Color color = Colors.grey]) {
   return BoxDecoration(
-    border: Border.all(color: Colors.grey, width: 2),
-    borderRadius: BorderRadius.all(Radius.circular(10))
+    border: Border.all(color: color, width: 2),
+    borderRadius: BorderRadius.all(Radius.circular(radius))
   );
 }
 

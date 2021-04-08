@@ -15,14 +15,20 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
+  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
+
   TextEditingController textController = TextEditingController();
   FocusNode focusNode;
+
+  double searchBarWidth;
   String input = "";
+
   Note deletedNote;
 
   @override
   void initState() {
     focusNode = FocusNode();
+    focusNode.addListener(() { isTextFieldFocused(); });
 
     super.initState();
   }
@@ -32,6 +38,10 @@ class _MainPageState extends State<MainPage> {
     focusNode.dispose();
 
     super.dispose();
+  }
+
+  bool isTextFieldFocused() {
+    return focusNode.hasFocus;
   }
 
   void reorderList(int oldIndex, int newIndex) {
@@ -55,8 +65,8 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  void addItem(Note newNote) {
-    Hive.box("note").add(Note("", "", false));
+  void addNote(Note newNote) {
+    Hive.box("note").add(Note("", "", false, ""));
     final noteBox = Hive.box("note");
 
     for(int i = Hive.box("note").length - 1; i >= 1 ; i--) {
@@ -81,6 +91,7 @@ class _MainPageState extends State<MainPage> {
       child: GestureDetector(
         onTap: () => focusNode.unfocus(),
         child: Scaffold(
+          key: _scaffoldKey,
           backgroundColor: Color(0xFF424242),
           drawer: DrawerPage(),
           floatingActionButton: _buildFloatingWidget(),
@@ -100,11 +111,11 @@ class _MainPageState extends State<MainPage> {
       backgroundColor: Colors.yellow[400],
       child: Icon(Icons.add_rounded, color: Color(0xFF424242), size: 30),
       onPressed: () {
-        addItem(Note("", "", false));
+        addNote(Note("", "", false, ""));
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => EditPage(Note("", "", false), 0)
+              builder: (context) => EditPage(Note("", "", false, ""), 0)
           )
         );
       }
@@ -114,25 +125,66 @@ class _MainPageState extends State<MainPage> {
   Widget _buildTopBar() {
     return Row(
       children: [
-        //Flexible(child: Container()),
+        _buildDrawerButton(),
         Flexible(child: _buildSearchBar())
       ]
     );
   }
 
+  Widget _buildDrawerButton() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(10, 20, 5, 10),
+      child: GestureDetector(
+        child: Icon(Icons.menu_rounded, size: 30, color: Colors.white),
+        onTap: () => _scaffoldKey.currentState.openDrawer()
+      )
+    );
+  }
+
   Widget _buildSearchBar() {
+    if(isTextFieldFocused())
+      searchBarWidth = MediaQuery.of(context).size.width * 0.70;
+    else searchBarWidth = MediaQuery.of(context).size.width * 0.845;
+    setState(() {});
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.05,
-      margin: EdgeInsets.fromLTRB(5, 20, 5, 10),
-      padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-      child: TextField(
-        style: TextStyle(color: Colors.white),
-        focusNode: focusNode,
-        controller: textController,
-        onChanged: (String value) {
-          setState(() { input = value.toLowerCase(); });
-        },
-        decoration: style.searchBarDecoration()
+      margin: EdgeInsets.fromLTRB(5, 20, 0, 10),
+      padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+      child: Row(
+        children: [
+          AnimatedContainer(
+            duration: Duration(seconds: 1),
+            curve: Curves.fastOutSlowIn,
+            width: searchBarWidth,
+            child: TextField(
+              style: TextStyle(color: Colors.white),
+              focusNode: focusNode,
+              controller: textController,
+              decoration: style.searchBarDecoration(),
+              onChanged: (String value) {
+                setState(() { input = value.toLowerCase(); });
+              }
+            )
+          ),
+
+          Visibility(
+            visible: isTextFieldFocused(),
+            child: Expanded(
+              child: Container(
+                margin: EdgeInsets.only(left: 5),
+                child: GestureDetector(
+                  child: Text("Cancel", style: style.customStyle(16, color: Colors.blue[400]), maxLines: 1),
+                  onTap: () => setState(() {
+                    textController.text = "";
+                    input = "";
+                    focusNode.unfocus();
+                  })
+                )
+              )
+            )
+          )
+        ]
       )
     );
   }
@@ -150,10 +202,59 @@ class _MainPageState extends State<MainPage> {
               for(int i = 0; i < Hive.box("note").length; i++)
                 doNotesContainInput(i)
                   ? _buildNote(i)
-                  : Container(key: UniqueKey())
+                  : _buildNoteNotFound(i),
+
+              if(Hive.box("note").length == 0)
+                _buildEmptyText()
             ]
           );
         }
+      )
+    );
+  }
+
+  Widget _buildNoteNotFound(int i) {
+    return Visibility(
+      key: UniqueKey(),
+      visible: i == 0,
+      child: GestureDetector(
+        child: Container(
+          margin: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.3),
+          child: Row(
+            children: [
+              Icon(Icons.add_rounded, size: 25, color: Colors.yellow[400]),
+              Text("Create new note", style: style.customStyle(18))
+            ]
+          )
+        ),
+        onTap: () {
+          addNote(Note("", "", false, ""));
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => EditPage(Note("", input, false, ""), 0)
+            )
+          );
+        }
+      )
+    );
+  }
+
+  Widget _buildEmptyText() {
+    return Center(
+      key: UniqueKey(),
+      child: Padding(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.7),
+        child: Column(
+          children: [
+            Text("You don't have any notes yet", style: style.customStyle(25, color: Colors.grey)),
+            Text("Tap here to create one!", style: style.customStyle(25, color: Colors.grey)),
+            Padding(
+              padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.5, top: 7),
+              child: Icon(Icons.subdirectory_arrow_right_rounded, size: 40, color: Colors.grey),
+            )
+          ]
+        )
       )
     );
   }
@@ -175,7 +276,7 @@ class _MainPageState extends State<MainPage> {
                 TextButton(
                   child: Text("UNDO", style: style.customStyle(15, color: Colors.yellow[400])),
                   onPressed: () {
-                    addItem(deletedNote);
+                    addNote(deletedNote);
                     ScaffoldMessenger.of(context).hideCurrentSnackBar();
                   }
                 )
@@ -211,9 +312,25 @@ class _MainPageState extends State<MainPage> {
       constraints: BoxConstraints(minHeight: 50),
       padding: EdgeInsets.all(10),
       margin: EdgeInsets.fromLTRB(10, 5, 10, 5),
-      decoration: style.containerDecoration(),
+      decoration: style.containerDecoration(10),
       child: Column(
         children: [
+          Visibility(
+            visible: note.label != "",
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                decoration: style.containerDecoration(20, Colors.grey[600]),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
+                  child: Text(note.label, style: style.customStyle(15))
+                )
+              )
+            )
+          ),
+
+          Visibility(visible: note.label != "", child: Container(height: 5)),
+
           Visibility(
             visible: note.title != "",
             child: Align(

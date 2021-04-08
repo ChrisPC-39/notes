@@ -13,5 +13,8 @@ class Note {
   @HiveField(2)
   final bool isEditing;
 
-  Note(this.title, this.content, this.isEditing);
+  @HiveField(3)
+  final String label;
+
+  Note(this.title, this.content, this.isEditing, this.label);
 }
