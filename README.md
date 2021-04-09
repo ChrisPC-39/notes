@@ -1,4 +1,4 @@
-# Notes (name in progress)
+# Handy Notes
 
 Offline note taking app
 
