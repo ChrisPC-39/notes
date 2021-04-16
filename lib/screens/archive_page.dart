@@ -12,11 +12,8 @@ class ArchivePage extends StatefulWidget {
 }
 
 class _ArchivePageState extends State<ArchivePage> {
-  void deleteAll() {
-    final archiveBox = Hive.box("archive");
-
-    for(int i = 0; i < archiveBox.length; i++)
-      setState(() => archiveBox.deleteAt(i));
+  void deleteAll() async {
+    Hive.box("archive").clear();
   }
 
   void restoreAll() {

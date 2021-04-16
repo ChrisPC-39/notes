@@ -16,6 +16,7 @@ Future<void> main() async {
   Hive.registerAdapter(LabelAdapter());
   Hive.registerAdapter(ArchivedAdapter());
 
+  await Hive.openBox("note");
   await Hive.openBox("label");
   await Hive.openBox("archive");
 
