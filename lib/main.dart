@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
+import 'package:notes/database/archived.dart';
 import 'package:notes/database/labels.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
@@ -13,8 +14,10 @@ Future<void> main() async {
   Hive.init(appDocumentDirectory.path);
   Hive.registerAdapter(NoteAdapter());
   Hive.registerAdapter(LabelAdapter());
+  Hive.registerAdapter(ArchivedAdapter());
 
   await Hive.openBox("label");
+  await Hive.openBox("archive");
 
   runApp(MaterialApp(home: MyApp(), debugShowCheckedModeBanner: false));
 }

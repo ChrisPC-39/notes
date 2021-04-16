@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:notes/database/note.dart';
 
 import '../database/labels.dart';
 import '../style/decoration.dart' as style;
@@ -98,7 +99,8 @@ class _LabelPageState extends State<LabelPage> {
           body: Column(
             children: [
               _buildTopBar(),
-              _buildListView()
+              _buildListView(),
+              _buildNavBar()
             ]
           )
         ),
@@ -205,12 +207,31 @@ class _LabelPageState extends State<LabelPage> {
             itemBuilder: (context, index) {
               final label = Hive.box("label").getAt(index) as Label;
 
+              if(Hive.box("label").length == 0) {
+                _buildEmptyText();
+              }
+
               return label.label.contains(input.toLowerCase())
                 ? _buildOpenContainer(index)
                 : Container();
             }
           );
         }
+      )
+    );
+  }
+
+  Widget _buildEmptyText() {
+    return Center(
+      key: UniqueKey(),
+      child: Padding(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.5),
+        child: Column(
+          children: [
+            Text("You don't have any labels yet", style: style.customStyle(25, color: Colors.grey)),
+            Text("Tap the \"+\" button to create one!", style: style.customStyle(25, color: Colors.grey))
+          ]
+        )
       )
     );
   }
@@ -225,7 +246,7 @@ class _LabelPageState extends State<LabelPage> {
         openColor: Color(0xFF424242),
 
         closedBuilder: (context, action) {
-          return _buildLabelPreview(label);
+          return _buildLabelPreview(label, i);
         },
 
         openBuilder: (context, action) {
@@ -234,17 +255,123 @@ class _LabelPageState extends State<LabelPage> {
     );
   }
 
-  Widget _buildLabelPreview(Label label) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(10, 10, 0, 0),
-      margin: EdgeInsets.fromLTRB(10, 5, 10, 5),
-      child: Row(
-        children: [
-          Icon(Icons.label_important_outline_rounded, size: 30, color: Colors.white),
-          SizedBox(width: 5),
-          Text(label.label, style: style.customStyle(25))
-        ]
+  Widget _buildLabelPreview(Label label, int index) {
+    return Dismissible(
+      key: UniqueKey(),
+      onDismissed: (direction) {
+        Label labelCopy = label;
+        List<int> indices = [];
+
+        for(int i = 0; i < Hive.box("note").length; i++) {
+          final note = Hive.box("note").getAt(i) as Note;
+
+          if(note.label == label.label) {
+            Hive.box("note").putAt(i, Note(note.title, note.content, false, ""));
+            indices.add(i);
+          }
+        }
+
+        Hive.box("label").deleteAt(index);
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Label deleted", style: style.customStyle(15)),
+                TextButton(
+                  child: Text("UNDO", style: style.customStyle(15, color: Colors.yellow[400])),
+                  onPressed: () {
+                    Hive.box("label").add(Label(labelCopy.label));
+
+                    for(int i = 0; i < indices.length; i++) {
+                      final note = Hive.box("note").getAt(indices[i]) as Note;
+                      Hive.box("note").putAt(indices[i], Note(note.title, note.content, false, labelCopy.label));
+                    }
+
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  }
+                )
+              ]
+            )
+          )
+        );
+      },
+      background: _buildDismissLabel(Alignment.centerLeft),
+      secondaryBackground: _buildDismissLabel(Alignment.centerRight),
+      child: Container(
+        padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+        margin: EdgeInsets.fromLTRB(10, 10, 10, 10),
+        child: Row(
+          children: [
+            Icon(Icons.label_important_outline_rounded, size: 30, color: Colors.white),
+            SizedBox(width: 5),
+            Text(label.label, style: style.customStyle(25))
+          ]
+        )
       )
+    );
+  }
+
+  Widget _buildDismissLabel(Alignment alignment) {
+    return Container(
+      padding: EdgeInsets.only(left: 10, right: 10),
+      margin: EdgeInsets.fromLTRB(10, 0, 10, 0),
+      decoration: style.containerDecoration(10, background: Colors.red[400], color: Colors.transparent),
+      child: Align(
+        alignment: alignment,
+        child: Icon(Icons.delete_forever, color: Colors.white)
+      )
+    );
+  }
+
+  Widget _buildNavBar() {
+    return BottomNavigationBar(
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.white,
+      backgroundColor: Color(0xFF424242),
+      items: [
+        _buildNavBarItem(Icons.arrow_back_ios_rounded, "Back"),
+        _buildNavBarItem(Icons.search, "Search"),
+        _buildNavBarItem(Icons.add_rounded, "Add")
+      ],
+      onTap: (index) {
+        switch(index) {
+          case 0:
+            navBack();
+            break;
+          case 1:
+            navSearch();
+            break;
+          case 2:
+            navAdd();
+            break;
+          default:
+            break;
+        }
+      }
+    );
+  }
+
+  void navBack() {
+    Navigator.pop(context);
+  }
+
+  void navSearch() {
+    focusNode.requestFocus();
+  }
+
+  void navAdd() {
+    if(textController.text.isEmpty)
+      focusNode.requestFocus();
+    else addLabel(Label(input));
+  }
+
+  BottomNavigationBarItem _buildNavBarItem(IconData icon, String text) {
+    return BottomNavigationBarItem(
+      icon: Icon(icon),
+      label: text
     );
   }
 }

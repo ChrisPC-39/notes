@@ -43,8 +43,9 @@ OutlineInputBorder outlineBorder() {
   );
 }
 
-BoxDecoration containerDecoration(double radius, [Color color = Colors.grey]) {
+BoxDecoration containerDecoration(double radius, {Color color = Colors.grey, Color background = Colors.transparent}) {
   return BoxDecoration(
+    color: background,
     border: Border.all(color: color, width: 2),
     borderRadius: BorderRadius.all(Radius.circular(radius))
   );

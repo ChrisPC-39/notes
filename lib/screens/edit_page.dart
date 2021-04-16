@@ -289,7 +289,7 @@ class _EditPageState extends State<EditPage> {
         itemBuilder: (context, index) {
           return _buildSelectableLabel(index);
         }
-      ),
+      )
     );
   }
 
@@ -357,13 +357,13 @@ class _EditPageState extends State<EditPage> {
         alignment: Alignment.bottomLeft,
         child: Container(
           margin: EdgeInsets.only(left: 10),
-          decoration: style.containerDecoration(20, Colors.grey[600]),
+          decoration: style.containerDecoration(20, color: Colors.grey[600]),
           child: Padding(
             padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
             child: Text(widget.note.label, style: style.customStyle(18))
           )
-        ),
-      ),
+        )
+      )
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:notes/screens/archive_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../style/decoration.dart' as style;
@@ -19,6 +20,16 @@ class _DrawerPageState extends State<DrawerPage> {
   static const _githubURL = "https://github.com/ChrisPC-39/notes";
   static const _googlePlayURL = "https://play.google.com/store/apps/details?id=com.notes.exo";
 
+  void openArchivePage() {
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ArchivePage()
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -30,14 +41,7 @@ class _DrawerPageState extends State<DrawerPage> {
             _buildListTile(
               Icons.archive_outlined,
               "Archive",
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => LabelPage(addNewLabel: false)
-                  )
-                );
-              }
+              () => openArchivePage()
             ),
             Divider(thickness: 1, color: Colors.white),
             _buildLabelTitle(Icons.label_rounded, "Labels"),

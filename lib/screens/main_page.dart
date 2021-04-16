@@ -1,8 +1,12 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:focused_menu/modals.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:focused_menu/focused_menu.dart';
+import 'package:notes/database/labels.dart';
 
+import '../database/archived.dart';
 import '../style/decoration.dart' as style;
 import '../database/note.dart';
 import 'drawer_page.dart';
@@ -14,6 +18,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  int radioIndex = -1;
   GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
@@ -83,6 +88,37 @@ class _MainPageState extends State<MainPage> {
 
     return note.title.toLowerCase().contains(input)
            || note.content.toLowerCase().contains(input);
+  }
+
+  void _removeLabelAction(int noteIndex) {
+    final note = Hive.box("note").getAt(noteIndex) as Note;
+
+    if(note.label != "") {
+      final newNote = Note(note.title, note.content, false, "");
+
+      Hive.box("note").putAt(noteIndex, newNote);
+    }
+  }
+
+  void _addLabelAction(int noteIndex) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Select a label", style: style.customStyle(22)),
+          backgroundColor: Color(0xFF424242),
+          content: Hive.box("label").length == 0
+            ? Text("You have no labels yet", style: style.customStyle(16))
+            : _buildLabelListView(noteIndex),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: style.customStyle(18, color: Colors.blue))
+            )
+          ]
+        );
+      }
+    );
   }
 
   @override
@@ -257,32 +293,111 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget _buildNote(int index) {
-    return Dismissible(
+    return FocusedMenuHolder(
       key: UniqueKey(),
-      child: _buildOpenContainer(index),
-      onDismissed: (direction) {
-        deletedNote = Hive.box("note").getAt(index) as Note;
-        setState(() { Hive.box("note").deleteAt(index); });
+      menuWidth: MediaQuery.of(context).size.width,
+      onPressed: () {},
+      menuItems: [
+        _buildFocusedMenuItem("Add label", Icons.label_outline, () => _addLabelAction(index)),
+        _buildFocusedMenuItem("Remove label", Icons.label_off_outlined, () => _removeLabelAction(index)),
+        _buildFocusedMenuItem("Archive", Icons.archive_outlined,
+                () => dismissNote(index), background: Colors.green[400]
+        ),
+        _buildFocusedMenuItem("Delete permanently", Icons.delete_forever_rounded,
+                () => Hive.box("note").deleteAt(index), background: Colors.red[400]
+        )
+      ],
+      child: Dismissible(
+        key: UniqueKey(),
+        child: _buildOpenContainer(index),
+        background: _buildDismissArchive(Alignment.centerLeft),
+        secondaryBackground: _buildDismissArchive(Alignment.centerRight),
+        onDismissed: (direction) => dismissNote(index)
+      )
+    );
+  }
 
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Note deleted", style: style.customStyle(15)),
-                TextButton(
-                  child: Text("UNDO", style: style.customStyle(15, color: Colors.yellow[400])),
-                  onPressed: () {
-                    addNote(deletedNote);
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  }
-                )
-              ]
+  void dismissNote(int index) {
+    deletedNote = Hive.box("note").getAt(index) as Note;
+    Hive.box("archive").add(Archived(deletedNote.title, deletedNote.content, deletedNote.label));
+    setState(() { Hive.box("note").deleteAt(index); });
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Note archived", style: style.customStyle(15)),
+            TextButton(
+              child: Text("UNDO", style: style.customStyle(15, color: Colors.yellow[400])),
+              onPressed: () {
+                addNote(deletedNote);
+                Hive.box("archive").deleteAt(Hive.box("archive").length - 1);
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              }
             )
-          )
-        );
-      }
+          ]
+        )
+      )
+    );
+  }
+
+  FocusedMenuItem _buildFocusedMenuItem(String title, IconData icon, Function _onTap, {Color color = Colors.black, Color background = Colors.white}) {
+    return FocusedMenuItem(
+      backgroundColor: background,
+      title: Text(title, style: style.customStyle(18, color: color, fontWeight: "bold")),
+      trailingIcon: Icon(icon, size: 22, color: color),
+      onPressed: _onTap
+    );
+  }
+
+  Widget _buildLabelListView(int noteIndex) {
+    return Container(
+      width: 200,
+      height: 200,
+      child: ListView.builder(
+        physics: BouncingScrollPhysics(),
+        itemCount: Hive.box("label").length,
+        itemBuilder: (context, index) {
+          return _buildSelectableLabel(index, noteIndex);
+        }
+      )
+    );
+  }
+
+  Widget _buildSelectableLabel(int i, int noteIndex) {
+    final labelBox = Hive.box("label");
+    final label = labelBox.getAt(i) as Label;
+
+    return RadioListTile(
+      title: Text(label.label, style: style.customStyle(16)),
+      value: i,
+      toggleable: true,
+      groupValue: radioIndex,
+      activeColor: Colors.white,
+      selectedTileColor: Colors.white,
+      onChanged: (value) => setState(() {
+        radioIndex = value;
+        Navigator.pop(context);
+
+        final note = Hive.box("note").getAt(noteIndex) as Note;
+        final newNote = Note(note.title, note.content, false, label.label);
+        Hive.box("note").putAt(noteIndex, newNote);
+      })
+    );
+  }
+
+  Widget _buildDismissArchive(Alignment alignment) {
+    return Container(
+      constraints: BoxConstraints(minHeight: 50),
+      padding: EdgeInsets.all(10),
+      margin: EdgeInsets.fromLTRB(10, 5, 10, 5),
+      decoration: style.containerDecoration(10, background: Colors.green[400], color: Colors.transparent),
+      child: Align(
+        alignment: alignment,
+        child: Icon(Icons.archive_rounded, color: Colors.white)
+      )
     );
   }
 
@@ -310,7 +425,7 @@ class _MainPageState extends State<MainPage> {
       constraints: BoxConstraints(minHeight: 50),
       padding: EdgeInsets.all(10),
       margin: EdgeInsets.fromLTRB(10, 5, 10, 5),
-      decoration: style.containerDecoration(10, Colors.grey[400]),
+      decoration: style.containerDecoration(10, color: Colors.grey[400]),
       child: Column(
         children: [
           Row(
@@ -327,7 +442,7 @@ class _MainPageState extends State<MainPage> {
               Visibility(
                 visible: note.label != "",
                 child: Container(
-                  decoration: style.containerDecoration(20, Colors.grey[600]),
+                  decoration: style.containerDecoration(20, color: Colors.grey[600]),
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
                     child: Text(note.label, style: style.customStyle(15))
