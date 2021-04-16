@@ -94,11 +94,12 @@ class _MainPageState extends State<MainPage> {
           key: _scaffoldKey,
           backgroundColor: Color(0xFF424242),
           drawer: DrawerPage(),
-          floatingActionButton: _buildFloatingWidget(),
+          //floatingActionButton: _buildFloatingWidget(),
           body: Column(
             children: [
               _buildTopBar(),
-              _buildListView()
+              _buildListView(),
+              _buildNavBar()
             ]
           )
         )
@@ -244,15 +245,11 @@ class _MainPageState extends State<MainPage> {
     return Center(
       key: UniqueKey(),
       child: Padding(
-        padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.7),
+        padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.5),
         child: Column(
           children: [
             Text("You don't have any notes yet", style: style.customStyle(25, color: Colors.grey)),
-            Text("Tap here to create one!", style: style.customStyle(25, color: Colors.grey)),
-            Padding(
-              padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.5, top: 7),
-              child: Icon(Icons.subdirectory_arrow_right_rounded, size: 40, color: Colors.grey),
-            )
+            Text("Tap the \"+\" button to create one!", style: style.customStyle(25, color: Colors.grey))
           ]
         )
       )
@@ -358,6 +355,59 @@ class _MainPageState extends State<MainPage> {
             )
           )
         ]
+      )
+    );
+  }
+
+  Widget _buildNavBar() {
+    return BottomNavigationBar(
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.white,
+      backgroundColor: Color(0xFF424242),
+      items: [
+        _buildNavBarItem(Icons.menu_rounded, "Drawer"),
+        _buildNavBarItem(Icons.search, "Search"),
+        _buildNavBarItem(Icons.add_rounded, "Add")
+      ],
+      onTap: (index) {
+        switch(index) {
+          case 0:
+            openDrawer();
+            break;
+          case 1:
+            focusSearchBar();
+            break;
+          case 2:
+            addButton();
+            break;
+          default:
+            break;
+        }
+      }
+    );
+  }
+
+  BottomNavigationBarItem _buildNavBarItem(IconData icon, String text) {
+    return BottomNavigationBarItem(
+      icon: Icon(icon),
+      label: text
+    );
+  }
+
+  void focusSearchBar() {
+    focusNode.requestFocus();
+  }
+
+  void openDrawer() {
+    _scaffoldKey.currentState.openDrawer();
+  }
+
+  void addButton() {
+    addNote(Note("", "", false, ""));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => EditPage(Note("", "", false, ""), 0)
       )
     );
   }

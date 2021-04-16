@@ -27,12 +27,25 @@ class _DrawerPageState extends State<DrawerPage> {
         child: ListView(
           children: [
             _buildTitle("Handy notes"),
+            _buildListTile(
+              Icons.archive_outlined,
+              "Archive",
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => LabelPage(addNewLabel: false)
+                  )
+                );
+              }
+            ),
+            Divider(thickness: 1, color: Colors.white),
             _buildLabelTitle(Icons.label_rounded, "Labels"),
             _buildLabelListView(),
             _buildAddLabel(),
             Divider(thickness: 1, color: Colors.white),
-            _buildListTile(Icons.privacy_tip_outlined, "Privacy and Policy", _privacyPolicyURL),
-            _buildListTile(Icons.call_split_rounded, "Github link", _githubURL)
+            _buildListTileURL(Icons.privacy_tip_outlined, "Privacy and Policy", _privacyPolicyURL),
+            _buildListTileURL(Icons.call_split_rounded, "Github link", _githubURL),
           ]
         )
       )
@@ -41,7 +54,10 @@ class _DrawerPageState extends State<DrawerPage> {
 
   Widget _buildTitle(String title) {
     return ListTile(
-      leading: Icon(Icons.notes_rounded, color: Colors.white, size: 25),
+      leading: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Icon(Icons.notes_rounded, color: Colors.white, size: 25)
+      ),
       title: RichText(
         text: TextSpan(
           text: title,
@@ -52,7 +68,17 @@ class _DrawerPageState extends State<DrawerPage> {
     );
   }
 
-  Widget _buildListTile(IconData icon, String text, String url) {
+  Widget _buildListTile(IconData icon, String title, Function _onTap) {
+    return GestureDetector(
+      onTap: _onTap,
+      child: ListTile(
+        leading: Icon(icon, size: 30, color: Colors.white),
+        title: Text(title, style: style.customStyle(20))
+      ),
+    );
+  }
+
+  Widget _buildListTileURL(IconData icon, String text, String url) {
     return ListTile(
       leading: Icon(icon, size: 30, color: Colors.white),
       title: RichText(
