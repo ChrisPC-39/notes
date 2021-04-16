@@ -201,15 +201,14 @@ class _LabelPageState extends State<LabelPage> {
       child: ValueListenableBuilder(
         valueListenable: Hive.box("label").listenable(),
         builder: (context, labelBox, _) {
+          if(Hive.box("label").length == 0)
+            return _buildEmptyText();
+
           return ListView.builder(
             physics: BouncingScrollPhysics(),
             itemCount: Hive.box("label").length,
             itemBuilder: (context, index) {
               final label = Hive.box("label").getAt(index) as Label;
-
-              if(Hive.box("label").length == 0) {
-                _buildEmptyText();
-              }
 
               return label.label.contains(input.toLowerCase())
                 ? _buildOpenContainer(index)
@@ -223,7 +222,6 @@ class _LabelPageState extends State<LabelPage> {
 
   Widget _buildEmptyText() {
     return Center(
-      key: UniqueKey(),
       child: Padding(
         padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.5),
         child: Column(
@@ -231,7 +229,7 @@ class _LabelPageState extends State<LabelPage> {
             Text("You don't have any labels yet", style: style.customStyle(25, color: Colors.grey)),
             Text("Tap the \"+\" button to create one!", style: style.customStyle(25, color: Colors.grey))
           ]
-        )
+        ),
       )
     );
   }

@@ -118,6 +118,9 @@ class _ArchivePageState extends State<ArchivePage> {
       child: ValueListenableBuilder(
         valueListenable: Hive.box("archive").listenable(),
         builder: (context, labelBox, _) {
+          if(Hive.box("archive").length == 0)
+            return _buildEmptyText();
+
           return ListView.builder(
             physics: BouncingScrollPhysics(),
             itemCount: Hive.box("archive").length,
@@ -129,6 +132,15 @@ class _ArchivePageState extends State<ArchivePage> {
             }
           );
         }
+      )
+    );
+  }
+
+  Widget _buildEmptyText() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.2),
+        child: Text("You have no archived notes!", style: style.customStyle(25, color: Colors.grey))
       )
     );
   }
