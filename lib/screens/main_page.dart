@@ -4,8 +4,9 @@ import 'package:focused_menu/modals.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:focused_menu/focused_menu.dart';
-import 'package:notes/database/labels.dart';
+import 'package:share/share.dart';
 
+import '../database/labels.dart';
 import '../database/archived.dart';
 import '../style/decoration.dart' as style;
 import '../database/note.dart';
@@ -299,6 +300,8 @@ class _MainPageState extends State<MainPage> {
       menuWidth: MediaQuery.of(context).size.width,
       onPressed: () {},
       menuItems: [
+        _buildFocusedMenuItem("Duplicate", Icons.copy, () => _duplicateAction(index)),
+        _buildFocusedMenuItem("Share", Icons.share, () => _shareAction(index)),
         _buildFocusedMenuItem("Add label", Icons.label_outline, () => _addLabelAction(index)),
         _buildFocusedMenuItem("Remove label", Icons.label_off_outlined, () => _removeLabelAction(index)),
         _buildFocusedMenuItem("Archive", Icons.archive_outlined,
@@ -316,6 +319,38 @@ class _MainPageState extends State<MainPage> {
         onDismissed: (direction) => dismissNote(index)
       )
     );
+  }
+
+  void _duplicateAction(int index) {
+    final note = Hive.box("note").getAt(index) as Note;
+
+    addItem(Note(
+      note.title,
+      note.content,
+      false,
+      ""
+    ));
+  }
+
+  void _shareAction(int index) {
+    final note = Hive.box("note").getAt(index) as Note;
+
+    Share.share(
+      "${note.title}\n"
+      "${note.content}"
+    );
+  }
+
+  void addItem(Note newNote) {
+    Hive.box("note").add(Note("", "", false, ""));
+    final noteBox = Hive.box("note");
+
+    for(int i = Hive.box("note").length - 1; i >= 1 ; i--) {
+      final note = noteBox.getAt(i - 1) as Note;
+      noteBox.putAt(i, note);
+    }
+
+    Hive.box("note").putAt(0, newNote);
   }
 
   void dismissNote(int index) {

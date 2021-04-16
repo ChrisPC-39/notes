@@ -6,7 +6,6 @@ import 'package:share/share.dart';
 import '../database/note.dart';
 import '../style/decoration.dart' as style;
 import '../database/labels.dart';
-import 'label_page.dart';
 
 class EditPage extends StatefulWidget {
   final Note note;
