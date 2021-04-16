@@ -185,7 +185,7 @@ class _MainPageState extends State<MainPage> {
     setState(() {});
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.05,
+      height: 40,
       margin: EdgeInsets.fromLTRB(5, 20, 0, 10),
       padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
       child: Row(
