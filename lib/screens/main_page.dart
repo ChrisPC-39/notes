@@ -295,16 +295,17 @@ class _MainPageState extends State<MainPage> {
   Widget _buildNote(int index) {
     return FocusedMenuHolder(
       key: UniqueKey(),
+      menuBoxDecoration: BoxDecoration(color: Color(0xFF424242)),
       menuWidth: MediaQuery.of(context).size.width,
       onPressed: () {},
       menuItems: [
         _buildFocusedMenuItem("Add label", Icons.label_outline, () => _addLabelAction(index)),
         _buildFocusedMenuItem("Remove label", Icons.label_off_outlined, () => _removeLabelAction(index)),
         _buildFocusedMenuItem("Archive", Icons.archive_outlined,
-                () => dismissNote(index), background: Colors.green[400]
+                () => dismissNote(index), color: Colors.green[400]
         ),
         _buildFocusedMenuItem("Delete permanently", Icons.delete_forever_rounded,
-                () => Hive.box("note").deleteAt(index), background: Colors.red[400]
+                () => Hive.box("note").deleteAt(index), color: Colors.red[400]
         )
       ],
       child: Dismissible(
@@ -343,7 +344,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  FocusedMenuItem _buildFocusedMenuItem(String title, IconData icon, Function _onTap, {Color color = Colors.black, Color background = Colors.white}) {
+  FocusedMenuItem _buildFocusedMenuItem(String title, IconData icon, Function _onTap, {Color color = Colors.white, Color background = const Color(0xFF424242)}) {
     return FocusedMenuItem(
       backgroundColor: background,
       title: Text(title, style: style.customStyle(18, color: color, fontWeight: "bold")),
