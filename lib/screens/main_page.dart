@@ -522,7 +522,7 @@ class _MainPageState extends State<MainPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => EditPage(Note("", "", false, ""), 0)
+          builder: (context) => EditPage(Note("", input, false, ""), 0)
       )
     );
   }
