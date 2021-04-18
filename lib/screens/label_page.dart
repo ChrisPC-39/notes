@@ -211,7 +211,7 @@ class _LabelPageState extends State<LabelPage> {
             itemBuilder: (context, index) {
               final label = Hive.box("label").getAt(index) as Label;
 
-              return label.label.contains(input.toLowerCase())
+              return label.label.toLowerCase().contains(input.toLowerCase())
                 ? _buildOpenContainer(index)
                 : Container();
             }

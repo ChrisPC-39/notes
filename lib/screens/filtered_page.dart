@@ -318,6 +318,7 @@ class _FilteredPageState extends State<FilteredPage> {
   Widget _buildNote(int index) {
     return FocusedMenuHolder(
       key: UniqueKey(),
+      animateMenuItems: false,
       menuWidth: MediaQuery.of(context).size.width,
       onPressed: () {},
       menuItems: [

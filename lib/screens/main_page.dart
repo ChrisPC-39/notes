@@ -320,6 +320,7 @@ class _MainPageState extends State<MainPage> {
     if(!isReordering) {
       return FocusedMenuHolder(
         key: UniqueKey(),
+        animateMenuItems: false,
         menuBoxDecoration: BoxDecoration(color: Color(0xFF424242)),
         menuWidth: MediaQuery.of(context).size.width,
         onPressed: () {},
