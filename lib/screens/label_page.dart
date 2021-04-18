@@ -364,7 +364,11 @@ class _LabelPageState extends State<LabelPage> {
   void navAdd() {
     if(textController.text.isEmpty)
       focusNode.requestFocus();
-    else addLabel(Label(input));
+    else {
+      addLabel(Label(input));
+      textController.clear();
+      focusNode.unfocus();
+    }
   }
 
   BottomNavigationBarItem _buildNavBarItem(IconData icon, String text) {
