@@ -49,7 +49,7 @@ class _DrawerPageState extends State<DrawerPage> {
             _buildAddLabel(),
             Divider(thickness: 1, color: Colors.white),
             _buildListTileURL(Icons.privacy_tip_outlined, "Privacy and Policy", _privacyPolicyURL),
-            _buildListTileURL(Icons.call_split_rounded, "Github link", _githubURL),
+            _buildListTileURL(Icons.call_split_rounded, "Github repo", _githubURL),
           ]
         )
       )

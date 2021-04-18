@@ -176,7 +176,9 @@ class _EditPageState extends State<EditPage> {
               _buildTopBar(),
               Divider(thickness: 1, color: Colors.white),
               _buildContent(),
-              _buildLabel()
+              _buildLabel(),
+              Spacer(flex: 1),
+              //_buildNavBar()
             ]
           )
         )
@@ -357,9 +359,8 @@ class _EditPageState extends State<EditPage> {
   }
 
   Widget _buildLabel() {
-    return Visibility(
-      visible: widget.note.label != "",
-      child: Align(
+    if(widget.note.label != "") {
+      return Align(
         alignment: Alignment.bottomLeft,
         child: Container(
           margin: EdgeInsets.only(left: 10),
@@ -369,7 +370,59 @@ class _EditPageState extends State<EditPage> {
             child: Text(widget.note.label, style: style.customStyle(18))
           )
         )
-      )
+      );
+    } else {
+      return Align(
+        alignment: Alignment.bottomLeft,
+        child: GestureDetector(
+          onTap: () => _addLabelAction(),
+          child: Container(
+            margin: EdgeInsets.only(left: 10),
+            decoration: style.containerDecoration(20, color: Colors.grey[600]),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
+              child: Icon(Icons.add, color: Colors.white54)
+            )
+          )
+        )
+      );
+    }
+  }
+
+  Widget _buildNavBar() {
+    return BottomNavigationBar(
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.white,
+      backgroundColor: Color(0xFF424242),
+      items: [
+        _buildNavBarItem(Icons.title, "Update title"),
+        _buildNavBarItem(Icons.note_add_outlined, "Update note"),
+        _buildNavBarItem(Icons.label, "Update label")
+      ],
+      onTap: (index) {
+        switch(index) {
+          case 0:
+            contentFocusNode.unfocus();
+            titleFocusNode.requestFocus();
+            break;
+          case 1:
+            titleFocusNode.unfocus();
+            contentFocusNode.requestFocus();
+            break;
+          case 2:
+            _addLabelAction();
+            break;
+          default:
+            break;
+        }
+      }
+    );
+  }
+
+  BottomNavigationBarItem _buildNavBarItem(IconData icon, String text) {
+    return BottomNavigationBarItem(
+      icon: Icon(icon),
+      label: text
     );
   }
 }

@@ -531,6 +531,11 @@ class _MainPageState extends State<MainPage> {
           ),
 
           Visibility(
+            visible: note.content != "" && note.label != "",
+            child: SizedBox(height: 5)
+          ),
+
+          Visibility(
             visible: note.content != "",
             child: Align(
               alignment: Alignment.centerLeft,
