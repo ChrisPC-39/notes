@@ -326,9 +326,9 @@ class _MainPageState extends State<MainPage> {
           _buildFocusedMenuItem("Duplicate", Icons.copy, () => _duplicateAction(index)),
           _buildFocusedMenuItem("Share", Icons.share, () => _shareAction(index)),
           _buildFocusedMenuItem("Reorder notes", Icons.wifi_protected_setup, () => _reorderAction()),
-          _buildFocusedMenuItem("Add label", Icons.label_outline, () => _addLabelAction(index)),
-          _buildFocusedMenuItem("Remove label", Icons.label_off_outlined, () => _removeLabelAction(index)),
-          _buildFocusedMenuItem("Archive", Icons.archive_outlined,
+          _buildFocusedMenuItem("Add label", Icons.label, () => _addLabelAction(index)),
+          _buildFocusedMenuItem("Remove label", Icons.label_off, () => _removeLabelAction(index)),
+          _buildFocusedMenuItem("Archive", Icons.archive,
                   () => dismissNote(index), color: Colors.green[400]
           ),
           _buildFocusedMenuItem("Delete permanently", Icons.delete_forever_rounded,

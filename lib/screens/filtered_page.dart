@@ -320,9 +320,9 @@ class _FilteredPageState extends State<FilteredPage> {
       menuWidth: MediaQuery.of(context).size.width,
       onPressed: () {},
       menuItems: [
-        _buildFocusedMenuItem("Add label", Icons.label_outline, () => _addLabelAction(index)),
-        _buildFocusedMenuItem("Remove label", Icons.label_off_outlined, () => _removeLabelAction(index)),
-        _buildFocusedMenuItem("Archive", Icons.archive_outlined,
+        _buildFocusedMenuItem("Add label", Icons.label, () => _addLabelAction(index)),
+        _buildFocusedMenuItem("Remove label", Icons.label_off, () => _removeLabelAction(index)),
+        _buildFocusedMenuItem("Archive", Icons.archive,
                 () => dismissNote(index), background: Colors.green[400]
         ),
         _buildFocusedMenuItem("Delete permanently", Icons.delete_forever_rounded,
