@@ -146,6 +146,7 @@ class _FilteredPageState extends State<FilteredPage> {
           content: TextField(
             controller: titleController,
             focusNode: titleFocusNode,
+            textCapitalization: TextCapitalization.sentences,
             style: TextStyle(color: Colors.white, fontSize: 18),
             onChanged: (value) => setState(() { input = value; }),
           ),

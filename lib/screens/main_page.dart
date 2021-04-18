@@ -221,6 +221,7 @@ class _MainPageState extends State<MainPage> {
               style: TextStyle(color: Colors.white),
               focusNode: focusNode,
               controller: textController,
+              textCapitalization: TextCapitalization.sentences,
               decoration: style.searchBarDecoration(),
               onChanged: (String value) {
                 setState(() { input = value.toLowerCase(); });

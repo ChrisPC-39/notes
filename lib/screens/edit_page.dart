@@ -20,6 +20,9 @@ class EditPage extends StatefulWidget {
 class _EditPageState extends State<EditPage> {
   int radioIndex = -1;
   bool editTitle = false;
+  bool isListEnabled = false;
+  DateTime lastUpdated = DateTime.now();
+
   FocusNode titleFocusNode;
   FocusNode contentFocusNode;
   TextEditingController titleController = TextEditingController();
@@ -139,7 +142,7 @@ class _EditPageState extends State<EditPage> {
               : _buildLabelListView(),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () { Navigator.pop(context); lastUpdated = DateTime.now(); },
               child: Text("Cancel", style: style.customStyle(18, color: Colors.blue))
             )
           ]
@@ -168,7 +171,7 @@ class _EditPageState extends State<EditPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: GestureDetector(
-        onTap: () => setState(() { editTitle = false; contentFocusNode.unfocus(); }),
+        onTap: () => setState(() { editTitle = false; contentFocusNode.unfocus(); titleFocusNode.unfocus(); }),
         child: Scaffold(
           backgroundColor: Color(0xFF424242),
           body: Column(
@@ -176,8 +179,9 @@ class _EditPageState extends State<EditPage> {
               _buildTopBar(),
               Divider(thickness: 1, color: Colors.white),
               _buildContent(),
-              _buildLabel(),
-              Spacer(flex: 1),
+              //_buildLabel(),
+              Divider(thickness: 1, color: Colors.white),
+              _buildBottomBar()
               //_buildNavBar()
             ]
           )
@@ -195,7 +199,7 @@ class _EditPageState extends State<EditPage> {
           _buildBackButton(),
           SizedBox(width: 15), //This is for padding
           _buildTitle(),
-          _buildOptions()
+          _buildOptions(),
         ]
       )
     );
@@ -233,7 +237,7 @@ class _EditPageState extends State<EditPage> {
             style: style.customStyle(30, fontWeight: "bold"),
             focusNode: titleFocusNode,
             controller: titleController,
-            onChanged: (String value) { saveTitle(value); },
+            onChanged: (String value) { saveTitle(value); lastUpdated = DateTime.now(); },
             decoration: style.editPageDecoration(true),
             textCapitalization: TextCapitalization.sentences,
           )
@@ -344,85 +348,67 @@ class _EditPageState extends State<EditPage> {
   }
 
   Widget _buildContent() {
-    return Container(
-      margin: EdgeInsets.only(top: 10),
-      child: TextField(
-        maxLines: null,
-        textCapitalization: TextCapitalization.sentences,
-        style: TextStyle(color: Colors.white, fontSize: 20),
-        focusNode: contentFocusNode,
-        controller: contentController,
-        onChanged: (String value) { saveContent(value); },
-        decoration: style.editPageDecoration(false, "Note")
+    return Expanded(
+      child: Container(
+        margin: EdgeInsets.only(top: 10),
+        child: TextField(
+          maxLines: null,
+          textCapitalization: TextCapitalization.sentences,
+          style: TextStyle(color: Colors.white, fontSize: 20),
+          focusNode: contentFocusNode,
+          controller: contentController,
+          onChanged: (String value) { saveContent(value); lastUpdated = DateTime.now(); },
+          decoration: style.editPageDecoration(false, "Note")
+        )
       )
     );
   }
 
   Widget _buildLabel() {
     if(widget.note.label != "") {
-      return Align(
-        alignment: Alignment.bottomLeft,
-        child: Container(
-          margin: EdgeInsets.only(left: 10),
-          decoration: style.containerDecoration(20, color: Colors.grey[600]),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
-            child: Text(widget.note.label, style: style.customStyle(18))
-          )
+      return Container(
+        margin: EdgeInsets.only(bottom: 5, left: 10),
+        decoration: style.containerDecoration(20, color: Colors.grey[600]),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
+          child: Text(widget.note.label, style: style.customStyle(19))
         )
       );
     } else {
-      return Align(
-        alignment: Alignment.bottomLeft,
-        child: GestureDetector(
-          onTap: () => _addLabelAction(),
-          child: Container(
-            margin: EdgeInsets.only(left: 10),
-            decoration: style.containerDecoration(20, color: Colors.grey[600]),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
-              child: Icon(Icons.add, color: Colors.white54)
-            )
-          )
+      return GestureDetector(
+        onTap: () => _addLabelAction(),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(10, 0, 0, 5),
+          child: Icon(Icons.label_outline, color: Colors.white, size: 30)
         )
       );
     }
   }
 
-  Widget _buildNavBar() {
-    return BottomNavigationBar(
-      selectedItemColor: Colors.white,
-      unselectedItemColor: Colors.white,
-      backgroundColor: Color(0xFF424242),
-      items: [
-        _buildNavBarItem(Icons.title, "Update title"),
-        _buildNavBarItem(Icons.note_add_outlined, "Update note"),
-        _buildNavBarItem(Icons.label, "Update label")
-      ],
-      onTap: (index) {
-        switch(index) {
-          case 0:
-            contentFocusNode.unfocus();
-            titleFocusNode.requestFocus();
-            break;
-          case 1:
-            titleFocusNode.unfocus();
-            contentFocusNode.requestFocus();
-            break;
-          case 2:
-            _addLabelAction();
-            break;
-          default:
-            break;
-        }
-      }
-    );
-  }
+  Widget _buildBottomBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // GestureDetector(
+        //   onTap: () => setState(() { isListEnabled = true; }),
+        //   child: Padding(
+        //     padding: EdgeInsets.fromLTRB(15, 0, 15, 5),
+        //     child: Icon(Icons.check_box_outlined, color: Colors.white, size: 30)
+        //   )
+        // ),
 
-  BottomNavigationBarItem _buildNavBarItem(IconData icon, String text) {
-    return BottomNavigationBarItem(
-      icon: Icon(icon),
-      label: text
+        _buildLabel(),
+        Spacer(flex: 1),
+
+        Padding(
+          padding: EdgeInsets.fromLTRB(0, 0, 15, 5),
+          child: Text("Last updated: ${lastUpdated.hour}:"
+              "${lastUpdated.minute < 10 ? "0" : ""}"
+              "${lastUpdated.minute}",
+              style: style.customStyle(16)
+          )
+        )
+      ]
     );
   }
 }

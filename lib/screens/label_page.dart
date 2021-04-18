@@ -146,6 +146,7 @@ class _LabelPageState extends State<LabelPage> {
         style: TextStyle(color: Colors.white),
         focusNode: focusNode,
         controller: textController,
+        textCapitalization: TextCapitalization.sentences,
         decoration: style.addLabelDecoration("Search or add a new label"),
         onChanged: (String value) {
           setState(() { input = value; });
