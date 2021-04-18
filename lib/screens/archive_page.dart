@@ -207,6 +207,11 @@ class _ArchivePageState extends State<ArchivePage> {
             ),
 
             Visibility(
+              visible: note.content != "" && note.label != "",
+              child: SizedBox(height: 5)
+            ),
+
+            Visibility(
               visible: note.content != "",
               child: Align(
                 alignment: Alignment.centerLeft,
