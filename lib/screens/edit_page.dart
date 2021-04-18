@@ -31,6 +31,13 @@ class _EditPageState extends State<EditPage> {
     contentController.text = widget.note.content;
     widget.note.label != "" ? radioIndex = findRadioIndex() : radioIndex = -1;
 
+    if(widget.note.label != "") {
+      Hive.box("note").putAt(
+          widget.index,
+          Note(widget.note.title, widget.note.content, widget.note.isEditing, widget.note.label)
+      );
+    }
+
     saveContent(contentController.text);
 
     titleFocusNode = FocusNode();

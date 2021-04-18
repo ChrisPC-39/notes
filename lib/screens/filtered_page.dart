@@ -220,7 +220,8 @@ class _FilteredPageState extends State<FilteredPage> {
           children: [
             _buildTopBar(),
             Divider(thickness: 1, color: Colors.white),
-            _buildListView()
+            _buildListView(),
+            _buildNavBar()
           ]
         )
       )
@@ -325,7 +326,7 @@ class _FilteredPageState extends State<FilteredPage> {
                 () => dismissNote(index), background: Colors.green[400]
         ),
         _buildFocusedMenuItem("Delete permanently", Icons.delete_forever_rounded,
-                () => Hive.box("note").deleteAt(index), background: Colors.red[400]
+                () { Hive.box("note").deleteAt(index); setState(() {}); }, background: Colors.red[400]
         )
       ],
       child: Dismissible(
@@ -493,6 +494,52 @@ class _FilteredPageState extends State<FilteredPage> {
           )
         ]
       )
+    );
+  }
+
+  Widget _buildNavBar() {
+    return BottomNavigationBar(
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.white,
+      backgroundColor: Color(0xFF424242),
+      items: [
+        _buildNavBarItem(Icons.arrow_back_ios_rounded, "Back"),
+        _buildNavBarItem(Icons.add_rounded, "Add")
+      ],
+      onTap: (index) {
+        switch(index) {
+          case 0:
+            navBack();
+            break;
+          case 1:
+            navAddButton();
+            break;
+          default:
+            break;
+        }
+      }
+    );
+  }
+
+  void navBack() {
+    Navigator.pop(context);
+  }
+
+  void navAddButton() {
+    addNote(Note("", "", false, ""));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => EditPage(Note("", "", false, widget.label.label), 0)
+      )
+    );
+    setState(() {});
+  }
+
+  BottomNavigationBarItem _buildNavBarItem(IconData icon, String text) {
+    return BottomNavigationBarItem(
+      icon: Icon(icon),
+      label: text
     );
   }
 }

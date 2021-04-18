@@ -128,6 +128,9 @@ class _ArchivePageState extends State<ArchivePage> {
               final archiveBox = Hive.box("archive");
               final archivedNote = archiveBox.getAt(index) as Archived;
 
+              if(archivedNote.title == "" && archivedNote.content == "")
+                archiveBox.deleteAt(index);
+
               return _buildNotePreview(archivedNote, index);
             }
           );

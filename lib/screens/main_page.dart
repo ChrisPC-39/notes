@@ -20,6 +20,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int radioIndex = -1;
+  bool isReordering = false;
   GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
@@ -135,8 +136,29 @@ class _MainPageState extends State<MainPage> {
           body: Column(
             children: [
               _buildTopBar(),
+              _buildFinishReorder(),
               _buildListView(),
               _buildNavBar()
+            ]
+          )
+        )
+      )
+    );
+  }
+
+  Widget _buildFinishReorder() {
+    return Visibility(
+      visible: isReordering,
+      child: Container(
+        margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
+        child: GestureDetector(
+          onTap: () => setState(() { isReordering = false; }),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Done reordering", style: style.customStyle(18)),
+              SizedBox(width: 10),
+              Icon(Icons.check, color: Colors.white, size: 20)
             ]
           )
         )
@@ -294,31 +316,42 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget _buildNote(int index) {
-    return FocusedMenuHolder(
-      key: UniqueKey(),
-      menuBoxDecoration: BoxDecoration(color: Color(0xFF424242)),
-      menuWidth: MediaQuery.of(context).size.width,
-      onPressed: () {},
-      menuItems: [
-        _buildFocusedMenuItem("Duplicate", Icons.copy, () => _duplicateAction(index)),
-        _buildFocusedMenuItem("Share", Icons.share, () => _shareAction(index)),
-        _buildFocusedMenuItem("Add label", Icons.label_outline, () => _addLabelAction(index)),
-        _buildFocusedMenuItem("Remove label", Icons.label_off_outlined, () => _removeLabelAction(index)),
-        _buildFocusedMenuItem("Archive", Icons.archive_outlined,
-                () => dismissNote(index), color: Colors.green[400]
-        ),
-        _buildFocusedMenuItem("Delete permanently", Icons.delete_forever_rounded,
-                () => Hive.box("note").deleteAt(index), color: Colors.red[400]
+    if(!isReordering) {
+      return FocusedMenuHolder(
+        key: UniqueKey(),
+        menuBoxDecoration: BoxDecoration(color: Color(0xFF424242)),
+        menuWidth: MediaQuery.of(context).size.width,
+        onPressed: () {},
+        menuItems: [
+          _buildFocusedMenuItem("Duplicate", Icons.copy, () => _duplicateAction(index)),
+          _buildFocusedMenuItem("Share", Icons.share, () => _shareAction(index)),
+          _buildFocusedMenuItem("Reorder notes", Icons.wifi_protected_setup, () => _reorderAction()),
+          _buildFocusedMenuItem("Add label", Icons.label_outline, () => _addLabelAction(index)),
+          _buildFocusedMenuItem("Remove label", Icons.label_off_outlined, () => _removeLabelAction(index)),
+          _buildFocusedMenuItem("Archive", Icons.archive_outlined,
+                  () => dismissNote(index), color: Colors.green[400]
+          ),
+          _buildFocusedMenuItem("Delete permanently", Icons.delete_forever_rounded,
+                  () => Hive.box("note").deleteAt(index), color: Colors.red[400]
+          )
+        ],
+        child: Dismissible(
+          key: UniqueKey(),
+          child: _buildOpenContainer(index),
+          background: _buildDismissArchive(Alignment.centerLeft),
+          secondaryBackground: _buildDismissArchive(Alignment.centerRight),
+          onDismissed: (direction) => dismissNote(index)
         )
-      ],
-      child: Dismissible(
+      );
+    } else {
+      return Dismissible(
         key: UniqueKey(),
         child: _buildOpenContainer(index),
         background: _buildDismissArchive(Alignment.centerLeft),
         secondaryBackground: _buildDismissArchive(Alignment.centerRight),
         onDismissed: (direction) => dismissNote(index)
-      )
-    );
+      );
+    }
   }
 
   void _duplicateAction(int index) {
@@ -339,6 +372,10 @@ class _MainPageState extends State<MainPage> {
       "${note.title}\n"
       "${note.content}"
     );
+  }
+
+  void _reorderAction() {
+    setState(() { isReordering = true; });
   }
 
   void addItem(Note newNote) {
