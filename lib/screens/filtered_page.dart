@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_colorpicker/material_picker.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
 import 'package:hive/hive.dart';
 import 'package:notes/database/archived.dart';
+import 'package:share/share.dart';
 
 import '../database/labels.dart';
 import '../database/note.dart';
 import '../style/decoration.dart' as style;
 import 'edit_page.dart';
+import 'selectable_note.dart';
 
 class FilteredPage extends StatefulWidget {
   final Label label;
@@ -65,6 +66,8 @@ class _FilteredPageState extends State<FilteredPage> {
 
       Hive.box("note").putAt(noteIndex, newNote);
     }
+
+    setState(() {});
   }
 
   void _addLabelAction(int noteIndex) {
@@ -86,6 +89,8 @@ class _FilteredPageState extends State<FilteredPage> {
         );
       }
     );
+
+    setState(() {});
   }
 
   void _deleteLabelAction() {
@@ -375,28 +380,77 @@ class _FilteredPageState extends State<FilteredPage> {
   }
 
   Widget _buildNote(int index) {
+    final note = Hive.box("note").getAt(index) as Note;
+
     return FocusedMenuHolder(
       key: UniqueKey(),
       animateMenuItems: false,
+      menuBoxDecoration: BoxDecoration(color: Color(0xFF424242)),
       menuWidth: MediaQuery.of(context).size.width,
       onPressed: () {},
       menuItems: [
-        _buildFocusedMenuItem("Add label", Icons.label, () => _addLabelAction(index)),
+        _buildFocusedMenuItem("Duplicate", Icons.copy, () => _duplicateAction(index)),
+        _buildFocusedMenuItem("Share", Icons.share, () => _shareAction(index)),
+        _buildFocusedMenuItem("${note.label != "" ? "Update label" : "Add label"}", Icons.label, () => _addLabelAction(index)),
         _buildFocusedMenuItem("Remove label", Icons.label_off, () => _removeLabelAction(index)),
         _buildFocusedMenuItem("Archive", Icons.archive,
-                () => dismissNote(index), background: Colors.green[400]
+                () => dismissNote(index), color: Colors.green[400]
         ),
         _buildFocusedMenuItem("Delete permanently", Icons.delete_forever_rounded,
-                () { Hive.box("note").deleteAt(index); setState(() {}); }, background: Colors.red[400]
+                () => deleteNote(index), color: Colors.red[400]
         )
       ],
       child: Dismissible(
-          key: UniqueKey(),
-          child: _buildOpenContainer(index),
-          background: _buildDismissArchive(Alignment.centerLeft),
-          secondaryBackground: _buildDismissArchive(Alignment.centerRight),
-          onDismissed: (direction) => dismissNote(index)
+        key: UniqueKey(),
+        child: _buildOpenContainer(index),
+        background: _buildDismissArchive(Alignment.centerLeft),
+        secondaryBackground: _buildDismissArchive(Alignment.centerRight),
+        onDismissed: (direction) => dismissNote(index)
       )
+    );
+  }
+
+  FocusedMenuItem _buildFocusedMenuItem(String title, IconData icon, Function _onTap, {Color color = Colors.white, Color background = const Color(0xFF424242)}) {
+    return FocusedMenuItem(
+      backgroundColor: background,
+      title: Text(title, style: style.customStyle(18, color: color, fontWeight: "bold")),
+      trailingIcon: Icon(icon, size: 22, color: color),
+      onPressed: _onTap
+    );
+  }
+
+  void _duplicateAction(int index) {
+    final note = Hive.box("note").getAt(index) as Note;
+
+    addItem(Note(
+        note.title,
+        note.content,
+        false,
+        note.label,
+        note.labelColor
+    ));
+
+    setState(() {});
+  }
+
+  void addItem(Note newNote) {
+    Hive.box("note").add(Note("", "", false, "", 0xFFFFFFFF));
+    final noteBox = Hive.box("note");
+
+    for(int i = Hive.box("note").length - 1; i >= 1 ; i--) {
+      final note = noteBox.getAt(i - 1) as Note;
+      noteBox.putAt(i, note);
+    }
+
+    Hive.box("note").putAt(0, newNote);
+  }
+
+  void _shareAction(int index) {
+    final note = Hive.box("note").getAt(index) as Note;
+
+    Share.share(
+        "${note.title}\n"
+            "${note.content}"
     );
   }
 
@@ -419,6 +473,30 @@ class _FilteredPageState extends State<FilteredPage> {
                 Hive.box("archive").deleteAt(Hive.box("archive").length - 1);
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 setState(() {});
+              }
+            )
+          ]
+        )
+      )
+    );
+  }
+
+  void deleteNote(int index) {
+    Note deletedNote = Hive.box("note").getAt(index) as Note;
+    setState(() { Hive.box("note").deleteAt(index); });
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Note deleted", style: style.customStyle(15)),
+            TextButton(
+              child: Text("UNDO", style: style.customStyle(15, color: Colors.yellow[400])),
+              onPressed: () {
+                addNote(deletedNote);
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
               }
             )
           ]
@@ -476,15 +554,6 @@ class _FilteredPageState extends State<FilteredPage> {
     );
   }
 
-  FocusedMenuItem _buildFocusedMenuItem(String title, IconData icon, Function _onTap, {Color color = Colors.black, Color background = Colors.white}) {
-    return FocusedMenuItem(
-      backgroundColor: background,
-      title: Text(title, style: style.customStyle(18, color: color, fontWeight: "bold")),
-      trailingIcon: Icon(icon, size: 22, color: color),
-      onPressed: _onTap
-    );
-  }
-
   Widget _buildOpenContainer(int i) {
     final noteBox = Hive.box("note");
     final note = noteBox.getAt(i) as Note;
@@ -509,7 +578,7 @@ class _FilteredPageState extends State<FilteredPage> {
       constraints: BoxConstraints(minHeight: 50),
       padding: EdgeInsets.all(10),
       margin: EdgeInsets.fromLTRB(10, 5, 10, 5),
-      decoration: style.containerDecoration(10),
+      decoration: style.containerDecoration(10, color: Colors.grey[400]),
       child: Column(
         children: [
           Row(
@@ -570,7 +639,8 @@ class _FilteredPageState extends State<FilteredPage> {
       backgroundColor: Color(0xFF424242),
       items: [
         _buildNavBarItem(Icons.arrow_back_ios_rounded, "Back"),
-        _buildNavBarItem(Icons.add_rounded, "Add")
+        _buildNavBarItem(Icons.add_rounded, "Create"),
+        _buildNavBarItem(Icons.check_box_outlined, "Add")
       ],
       onTap: (index) {
         switch(index) {
@@ -579,6 +649,9 @@ class _FilteredPageState extends State<FilteredPage> {
             break;
           case 1:
             navAddButton();
+            break;
+          case 2:
+            navSelectExisting();
             break;
           default:
             break;
@@ -600,6 +673,16 @@ class _FilteredPageState extends State<FilteredPage> {
       )
     );
     setState(() {});
+  }
+
+  void navSelectExisting() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+          pageBuilder: (context, anim1, anim2) => SelectablePage(widget.label),
+          transitionDuration: Duration(seconds: 0)
+      )
+    );
   }
 
   BottomNavigationBarItem _buildNavBarItem(IconData icon, String text) {

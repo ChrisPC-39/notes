@@ -336,7 +336,7 @@ class _MainPageState extends State<MainPage> {
                   () => dismissNote(index), color: Colors.green[400]
           ),
           _buildFocusedMenuItem("Delete permanently", Icons.delete_forever_rounded,
-                  () => Hive.box("note").deleteAt(index), color: Colors.red[400]
+                  () => deleteNote(index), color: Colors.red[400]
           )
         ],
         child: Dismissible(
@@ -412,6 +412,30 @@ class _MainPageState extends State<MainPage> {
               onPressed: () {
                 addNote(deletedNote);
                 Hive.box("archive").deleteAt(Hive.box("archive").length - 1);
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              }
+            )
+          ]
+        )
+      )
+    );
+  }
+
+  void deleteNote(int index) {
+    deletedNote = Hive.box("note").getAt(index) as Note;
+    setState(() { Hive.box("note").deleteAt(index); });
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Note deleted", style: style.customStyle(15)),
+            TextButton(
+              child: Text("UNDO", style: style.customStyle(15, color: Colors.yellow[400])),
+              onPressed: () {
+                addNote(deletedNote);
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
               }
             )
