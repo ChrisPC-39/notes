@@ -143,7 +143,7 @@ class _DrawerPageState extends State<DrawerPage> {
           children: [
             Icon(Icons.label_important_outline_rounded, size: 20, color: Colors.white),
             SizedBox(width: 5),
-            Text(label.label, style: style.customStyle(21))
+            Text(label.label, style: style.customStyle(21, color: Color(label.color)))
           ]
         )
       )
