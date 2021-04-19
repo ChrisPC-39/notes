@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
+import 'package:flutter_colorpicker/material_picker.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:notes/database/note.dart';
@@ -25,6 +26,8 @@ class _LabelPageState extends State<LabelPage> {
   double searchBarWidth;
   String input = "";
   bool addNewLabel = false;
+
+  Color pickerColor = Color(0xFF757575);
 
   @override
   void initState() {
@@ -74,7 +77,7 @@ class _LabelPageState extends State<LabelPage> {
   }
 
   void addLabel(Label newLabel) {
-    Hive.box("label").add(Label(""));
+    Hive.box("label").add(Label("", 0xFFFFFFFF));
     final labelBox = Hive.box("label");
 
     for(int i = Hive.box("label").length - 1; i >= 1 ; i--) {
@@ -165,7 +168,7 @@ class _LabelPageState extends State<LabelPage> {
               child: Text("Add", style: style.customStyle(16, color: Colors.blue[400]), maxLines: 1),
               onTap: () => setState(() {
                 if(_isLabelCorrect())
-                  addLabel(Label(input));
+                  addLabel(Label(input, 0xFFFFFFFF));
                 else _throwIncorrectNameErr();
 
                 textController.text = "";
@@ -265,7 +268,7 @@ class _LabelPageState extends State<LabelPage> {
           final note = Hive.box("note").getAt(i) as Note;
 
           if(note.label == label.label) {
-            Hive.box("note").putAt(i, Note(note.title, note.content, false, ""));
+            Hive.box("note").putAt(i, Note(note.title, note.content, false, "", 0xFFFFFFFF));
             indices.add(i);
           }
         }
@@ -282,11 +285,11 @@ class _LabelPageState extends State<LabelPage> {
                 TextButton(
                   child: Text("UNDO", style: style.customStyle(15, color: Colors.yellow[400])),
                   onPressed: () {
-                    Hive.box("label").add(Label(labelCopy.label));
+                    Hive.box("label").add(Label(labelCopy.label, labelCopy.color));
 
                     for(int i = 0; i < indices.length; i++) {
                       final note = Hive.box("note").getAt(indices[i]) as Note;
-                      Hive.box("note").putAt(indices[i], Note(note.title, note.content, false, labelCopy.label));
+                      Hive.box("note").putAt(indices[i], Note(note.title, note.content, false, labelCopy.label, labelCopy.color));
                     }
 
                     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -306,7 +309,15 @@ class _LabelPageState extends State<LabelPage> {
           children: [
             Icon(Icons.label_important_outline_rounded, size: 30, color: Colors.white),
             SizedBox(width: 5),
-            Text(label.label, style: style.customStyle(25))
+            Text(label.label, style: style.customStyle(25, color: Color(label.color))),
+            Spacer(flex: 1),
+            Padding(
+              padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+              child: GestureDetector(
+                onTap: () => _changeColorAction(label),
+                child: Icon(Icons.color_lens, color: Colors.white, size: 25)
+              )
+            )
           ]
         )
       )
@@ -365,7 +376,7 @@ class _LabelPageState extends State<LabelPage> {
     if(textController.text.isEmpty)
       focusNode.requestFocus();
     else {
-      addLabel(Label(input));
+      addLabel(Label(input, 0xFFFFFFFF));
       textController.clear();
       focusNode.unfocus();
     }
@@ -376,5 +387,57 @@ class _LabelPageState extends State<LabelPage> {
       icon: Icon(icon),
       label: text
     );
+  }
+
+  void _changeColorAction(Label label) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: AlertDialog(
+            backgroundColor: Color(0xFF424242),
+            title: Text("Pick a color", style: style.customStyle(18)),
+            content: MaterialPicker(
+              pickerColor: pickerColor,
+              onColorChanged: _changeColor
+            ),
+            actions: [
+              TextButton(
+                child: Text("Cancel", style: style.customStyle(18, color: Colors.blue)),
+                onPressed: () => Navigator.pop(context)
+              ),
+
+              TextButton(
+                child: Text("Done", style: style.customStyle(18, color: Colors.blue)),
+                onPressed: () {
+                  setState(() {
+                    for(int i = 0; i < Hive.box("note").length; i++) {
+                      final note = Hive.box("note").getAt(i) as Note;
+
+                      if(note.label == label.label)
+                        Hive.box("note").putAt(i, Note(note.title, note.content, note.isEditing, note.label, pickerColor.value));
+                    }
+
+                    for(int i = 0; i < Hive.box("label").length; i++) {
+                      final label = Hive.box("label").getAt(i) as Label;
+
+                      if(label.label == label.label)
+                        Hive.box("label").putAt(i, Label(label.label, pickerColor.value));
+                    }
+
+                    Navigator.pop(context);
+                  });
+                }
+              )
+            ]
+          )
+        );
+      }
+    );
+  }
+
+  void _changeColor(Color color) {
+    setState(() => pickerColor = color);
   }
 }

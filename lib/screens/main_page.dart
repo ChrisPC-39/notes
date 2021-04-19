@@ -73,7 +73,7 @@ class _MainPageState extends State<MainPage> {
   }
 
   void addNote(Note newNote) {
-    Hive.box("note").add(Note("", "", false, ""));
+    Hive.box("note").add(Note("", "", false, "", 0xFFFFFFFF));
     final noteBox = Hive.box("note");
 
     for(int i = Hive.box("note").length - 1; i >= 1 ; i--) {
@@ -96,7 +96,7 @@ class _MainPageState extends State<MainPage> {
     final note = Hive.box("note").getAt(noteIndex) as Note;
 
     if(note.label != "") {
-      final newNote = Note(note.title, note.content, false, "");
+      final newNote = Note(note.title, note.content, false, "", 0xFFFFFFFF);
 
       Hive.box("note").putAt(noteIndex, newNote);
     }
@@ -171,11 +171,11 @@ class _MainPageState extends State<MainPage> {
       backgroundColor: Colors.yellow[400],
       child: Icon(Icons.add_rounded, color: Color(0xFF424242), size: 30),
       onPressed: () {
-        addNote(Note("", "", false, ""));
+        addNote(Note("", "", false, "", 0xFFFFFFFF));
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => EditPage(Note("", "", false, ""), 0)
+              builder: (context) => EditPage(Note("", "", false, "", 0xFFFFFFFF), 0)
           )
         );
       }
@@ -289,11 +289,11 @@ class _MainPageState extends State<MainPage> {
           )
         ),
         onTap: () {
-          addNote(Note("", "", false, ""));
+          addNote(Note("", "", false, "", 0xFFFFFFFF));
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => EditPage(Note("", input, false, ""), 0)
+                builder: (context) => EditPage(Note("", input, false, "", 0xFFFFFFFF), 0)
             )
           );
         }
@@ -317,6 +317,8 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget _buildNote(int index) {
+    final note = Hive.box("note").getAt(index) as Note;
+
     if(!isReordering) {
       return FocusedMenuHolder(
         key: UniqueKey(),
@@ -328,7 +330,7 @@ class _MainPageState extends State<MainPage> {
           _buildFocusedMenuItem("Duplicate", Icons.copy, () => _duplicateAction(index)),
           _buildFocusedMenuItem("Share", Icons.share, () => _shareAction(index)),
           _buildFocusedMenuItem("Reorder notes", Icons.wifi_protected_setup, () => _reorderAction()),
-          _buildFocusedMenuItem("Add label", Icons.label, () => _addLabelAction(index)),
+          _buildFocusedMenuItem("${note.label != "" ? "Update label" : "Add label"}", Icons.label, () => _addLabelAction(index)),
           _buildFocusedMenuItem("Remove label", Icons.label_off, () => _removeLabelAction(index)),
           _buildFocusedMenuItem("Archive", Icons.archive,
                   () => dismissNote(index), color: Colors.green[400]
@@ -363,7 +365,8 @@ class _MainPageState extends State<MainPage> {
       note.title,
       note.content,
       false,
-      ""
+      "",
+      0xFFFFFFFF
     ));
   }
 
@@ -381,7 +384,7 @@ class _MainPageState extends State<MainPage> {
   }
 
   void addItem(Note newNote) {
-    Hive.box("note").add(Note("", "", false, ""));
+    Hive.box("note").add(Note("", "", false, "", 0xFFFFFFFF));
     final noteBox = Hive.box("note");
 
     for(int i = Hive.box("note").length - 1; i >= 1 ; i--) {
@@ -394,7 +397,7 @@ class _MainPageState extends State<MainPage> {
 
   void dismissNote(int index) {
     deletedNote = Hive.box("note").getAt(index) as Note;
-    Hive.box("archive").add(Archived(deletedNote.title, deletedNote.content, deletedNote.label));
+    Hive.box("archive").add(Archived(deletedNote.title, deletedNote.content, deletedNote.label, deletedNote.labelColor));
     setState(() { Hive.box("note").deleteAt(index); });
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -457,7 +460,7 @@ class _MainPageState extends State<MainPage> {
         Navigator.pop(context);
 
         final note = Hive.box("note").getAt(noteIndex) as Note;
-        final newNote = Note(note.title, note.content, false, label.label);
+        final newNote = Note(note.title, note.content, false, label.label, label.color);
         Hive.box("note").putAt(noteIndex, newNote);
       })
     );
@@ -517,7 +520,7 @@ class _MainPageState extends State<MainPage> {
               Visibility(
                 visible: note.label != "",
                 child: Container(
-                  decoration: style.containerDecoration(20, color: Colors.grey[600]),
+                  decoration: style.containerDecoration(20, color: Color(note.labelColor)),
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
                     child: Text(note.label, style: style.customStyle(15))
@@ -598,11 +601,11 @@ class _MainPageState extends State<MainPage> {
   }
 
   void addButton() {
-    addNote(Note("", "", false, ""));
+    addNote(Note("", "", false, "", 0xFFFFFFFF));
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => EditPage(Note("", input, false, ""), 0)
+          builder: (context) => EditPage(Note("", input, false, "", 0xFFFFFFFF), 0)
       )
     );
   }

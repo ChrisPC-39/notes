@@ -7,5 +7,8 @@ class Label {
   @HiveField(0)
   final String label;
 
-  Label(this.label);
+  @HiveField(1)
+  final int color;
+
+  Label(this.label, this.color);
 }

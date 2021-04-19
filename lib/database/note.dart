@@ -16,5 +16,8 @@ class Note {
   @HiveField(3)
   final String label;
 
-  Note(this.title, this.content, this.isEditing, this.label);
+  @HiveField(4)
+  final int labelColor;
+
+  Note(this.title, this.content, this.isEditing, this.label, this.labelColor);
 }

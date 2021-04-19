@@ -13,5 +13,8 @@ class Archived {
   @HiveField(3)
   String label;
 
-  Archived(this.title, this.content, this.label);
+  @HiveField(4)
+  int color;
+
+  Archived(this.title, this.content, this.label, this.color);
 }

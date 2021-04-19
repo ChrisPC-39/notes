@@ -20,19 +20,22 @@ class ArchivedAdapter extends TypeAdapter<Archived> {
       fields[1] as String,
       fields[2] as String,
       fields[3] as String,
+      fields[4] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, Archived obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(1)
       ..write(obj.title)
       ..writeByte(2)
       ..write(obj.content)
       ..writeByte(3)
-      ..write(obj.label);
+      ..write(obj.label)
+      ..writeByte(4)
+      ..write(obj.color);
   }
 
   @override

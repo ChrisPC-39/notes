@@ -2,7 +2,7 @@ name: notes
 description: Offline note keeping app.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 1.7.1+4
+version: 1.8.0+5
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -17,6 +17,7 @@ dependencies:
   share: ^2.0.1
   url_launcher: ^5.7.5
   focused_menu: ^1.0.5
+  flutter_colorpicker: ^0.2.4
 
 dev_dependencies:
   flutter_test:

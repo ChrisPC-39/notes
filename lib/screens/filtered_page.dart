@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_colorpicker/material_picker.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
 import 'package:hive/hive.dart';
@@ -21,10 +23,11 @@ class FilteredPage extends StatefulWidget {
 }
 
 class _FilteredPageState extends State<FilteredPage> {
+  String input = "";
   int radioIndex = -1;
   FocusNode titleFocusNode;
+  Color pickerColor = Color(0xFF757575);
   TextEditingController titleController = TextEditingController();
-  String input = "";
 
   @override
   void initState() {
@@ -43,7 +46,7 @@ class _FilteredPageState extends State<FilteredPage> {
   }
 
   void addNote(Note newNote) {
-    Hive.box("note").add(Note("", "", false, ""));
+    Hive.box("note").add(Note("", "", false, "", 0xFFFFFFFF));
     final noteBox = Hive.box("note");
 
     for(int i = Hive.box("note").length - 1; i >= 1 ; i--) {
@@ -58,7 +61,7 @@ class _FilteredPageState extends State<FilteredPage> {
     final note = Hive.box("note").getAt(noteIndex) as Note;
 
     if(note.label != "") {
-      final newNote = Note(note.title, note.content, false, "");
+      final newNote = Note(note.title, note.content, false, "", 0xFFFFFFFF);
 
       Hive.box("note").putAt(noteIndex, newNote);
     }
@@ -110,7 +113,7 @@ class _FilteredPageState extends State<FilteredPage> {
                   final note = noteBox.getAt(i) as Note;
 
                   if(note.label == widget.label.label)
-                    noteBox.putAt(i, Note(note.title, note.content, note.isEditing, ""));
+                    noteBox.putAt(i, Note(note.title, note.content, note.isEditing, "", 0xFFFFFFFF));
                 }
 
                 Hive.box("label").deleteAt(widget.index);
@@ -123,7 +126,7 @@ class _FilteredPageState extends State<FilteredPage> {
   }
 
   void saveTitle() {
-    Hive.box("label").putAt(widget.index, Label(input));
+    Hive.box("label").putAt(widget.index, Label(input, 0xFFFFFFFF));
   }
 
   void saveNoteLabel() {
@@ -132,7 +135,7 @@ class _FilteredPageState extends State<FilteredPage> {
       final note = noteBox.getAt(i) as Note;
 
       if(note.label == widget.label.label)
-        noteBox.putAt(i, Note(note.title, note.content, note.isEditing, input));
+        noteBox.putAt(i, Note(note.title, note.content, note.isEditing, input, note.labelColor));
     }
   }
 
@@ -167,7 +170,7 @@ class _FilteredPageState extends State<FilteredPage> {
                 Navigator.pushReplacement(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, anim1, anim2) => FilteredPage(Label(input), widget.index),
+                    pageBuilder: (context, anim1, anim2) => FilteredPage(Label(input, 0xFFFFFFFF), widget.index),
                     transitionDuration: Duration(seconds: 0)
                   )
                 );
@@ -253,10 +256,10 @@ class _FilteredPageState extends State<FilteredPage> {
   Widget _buildTitle() {
     return Expanded(
       child: Container(
-          margin: EdgeInsets.fromLTRB(0, 10, 0, 10),
-          child: Text(
-            widget.label.label,
-            style: style.customStyle(30, fontWeight: "bold", color: Colors.white)
+        margin: EdgeInsets.fromLTRB(0, 10, 0, 10),
+        child: Text(
+          widget.label.label,
+          style: style.customStyle(30, fontWeight: "bold", color: Colors.white)
         )
       )
     );
@@ -270,6 +273,7 @@ class _FilteredPageState extends State<FilteredPage> {
       itemBuilder: (context) => [
         _buildPopupMenuItem(1, Icons.delete_rounded, "Delete label"),
         _buildPopupMenuItem(2, Icons.edit_rounded, "Rename label"),
+        _buildPopupMenuItem(3, Icons.color_lens, "Change label color")
       ],
       onSelected: (value) {
         switch(value) {
@@ -279,11 +283,66 @@ class _FilteredPageState extends State<FilteredPage> {
           case 2:
             _renameLabelAction();
             break;
+          case 3:
+            _changeColorAction();
+            break;
           default:
             break;
         }
       }
     );
+  }
+
+  void _changeColorAction() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: AlertDialog(
+            backgroundColor: Color(0xFF424242),
+            title: Text("Pick a color", style: style.customStyle(18)),
+            content: MaterialPicker(
+              pickerColor: pickerColor,
+              onColorChanged: _changeColor
+            ),
+            actions: [
+              TextButton(
+                child: Text("Cancel", style: style.customStyle(18, color: Colors.blue)),
+                onPressed: () => Navigator.pop(context)
+              ),
+
+              TextButton(
+                child: Text("Done", style: style.customStyle(18, color: Colors.blue)),
+                onPressed: () {
+                  setState(() {
+                    for(int i = 0; i < Hive.box("note").length; i++) {
+                      final note = Hive.box("note").getAt(i) as Note;
+
+                      if(note.label == widget.label.label)
+                        Hive.box("note").putAt(i, Note(note.title, note.content, note.isEditing, note.label, pickerColor.value));
+                    }
+
+                    for(int i = 0; i < Hive.box("label").length; i++) {
+                      final label = Hive.box("label").getAt(i) as Label;
+
+                      if(label.label == widget.label.label)
+                        Hive.box("label").putAt(i, Label(label.label, pickerColor.value));
+                    }
+
+                    Navigator.pop(context);
+                  });
+                }
+              )
+            ]
+          )
+        );
+      }
+    );
+  }
+
+  void _changeColor(Color color) {
+    setState(() => pickerColor = color);
   }
 
   PopupMenuItem _buildPopupMenuItem(int i, IconData icon, String text) {
@@ -343,7 +402,7 @@ class _FilteredPageState extends State<FilteredPage> {
 
   void dismissNote(int index) {
     Note deletedNote = Hive.box("note").getAt(index) as Note;
-    Hive.box("archive").add(Archived(deletedNote.title, deletedNote.content, deletedNote.label));
+    Hive.box("archive").add(Archived(deletedNote.title, deletedNote.content, deletedNote.label, deletedNote.labelColor));
     setState(() { Hive.box("note").deleteAt(index); });
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -398,7 +457,7 @@ class _FilteredPageState extends State<FilteredPage> {
         Navigator.pop(context);
 
         final note = Hive.box("note").getAt(noteIndex) as Note;
-        final newNote = Note(note.title, note.content, false, label.label);
+        final newNote = Note(note.title, note.content, false, label.label, label.color);
         Hive.box("note").putAt(noteIndex, newNote);
       })
     );
@@ -467,7 +526,7 @@ class _FilteredPageState extends State<FilteredPage> {
               Visibility(
                 visible: note.label != "",
                 child: Container(
-                  decoration: style.containerDecoration(20, color: Colors.grey[600]),
+                  decoration: style.containerDecoration(20, color: Color(note.labelColor)),
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
                     child: Text(note.label, style: style.customStyle(15))
@@ -533,11 +592,11 @@ class _FilteredPageState extends State<FilteredPage> {
   }
 
   void navAddButton() {
-    addNote(Note("", "", false, ""));
+    addNote(Note("", "", false, "", 0xFFFFFFFF));
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => EditPage(Note("", "", false, widget.label.label), 0)
+          builder: (context) => EditPage(Note("", "", false, widget.label.label, widget.label.color), 0)
       )
     );
     setState(() {});

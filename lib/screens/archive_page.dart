@@ -22,7 +22,7 @@ class _ArchivePageState extends State<ArchivePage> {
     for(int i = 0; i < archiveBox.length; i++) {
       final note = archiveBox.getAt(i) as Archived;
 
-      Hive.box("note").add(Note(note.title, note.content, false, note.label));
+      Hive.box("note").add(Note(note.title, note.content, false, note.label, note.color));
       setState(() => archiveBox.deleteAt(i));
     }
   }
@@ -155,7 +155,7 @@ class _ArchivePageState extends State<ArchivePage> {
       secondaryBackground: _buildDismissArchive(Alignment.centerRight, Colors.red[400], Icons.delete_forever),
       onDismissed: (direction) {
         if(direction == DismissDirection.startToEnd) {
-          Hive.box("note").add(Note(note.title, note.content, false, note.label));
+          Hive.box("note").add(Note(note.title, note.content, false, note.label, note.color));
           Hive.box("archive").deleteAt(i);
 
           ScaffoldMessenger.of(context).hideCurrentSnackBar();

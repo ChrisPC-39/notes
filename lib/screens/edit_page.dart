@@ -37,7 +37,7 @@ class _EditPageState extends State<EditPage> {
     if(widget.note.label != "") {
       Hive.box("note").putAt(
           widget.index,
-          Note(widget.note.title, widget.note.content, widget.note.isEditing, widget.note.label)
+          Note(widget.note.title, widget.note.content, widget.note.isEditing, widget.note.label, widget.note.labelColor)
       );
     }
 
@@ -73,18 +73,18 @@ class _EditPageState extends State<EditPage> {
     final notesBox = Hive.box("note");
     final note = notesBox.getAt(widget.index) as Note;
 
-    notesBox.putAt(widget.index, Note(note.title, value, note.isEditing, note.label));
+    notesBox.putAt(widget.index, Note(note.title, value, note.isEditing, note.label, note.labelColor));
   }
 
   void saveTitle(String value) {
     final notesBox = Hive.box("note");
     final note = notesBox.getAt(widget.index) as Note;
 
-    notesBox.putAt(widget.index, Note(value, note.content, note.isEditing, note.label));
+    notesBox.putAt(widget.index, Note(value, note.content, note.isEditing, note.label, note.labelColor));
   }
 
   void addItem(Note newNote) {
-    Hive.box("note").add(Note("", "", false, ""));
+    Hive.box("note").add(Note("", "", false, "", 0xFFFFFFFF));
     final noteBox = Hive.box("note");
 
     for(int i = Hive.box("note").length - 1; i >= 1 ; i--) {
@@ -109,7 +109,7 @@ class _EditPageState extends State<EditPage> {
 
     Hive.box("note").putAt(
       widget.index,
-      Note(widget.note.title, widget.note.content, widget.note.isEditing, widget.note.label)
+      Note(widget.note.title, widget.note.content, widget.note.isEditing, widget.note.label, widget.note.labelColor)
     );
     setState(() {});
   }
@@ -119,7 +119,8 @@ class _EditPageState extends State<EditPage> {
       titleController.text,
       contentController.text,
       false,
-      ""
+      "",
+      0xFFFFFFFF
     ));
   }
 
@@ -153,7 +154,7 @@ class _EditPageState extends State<EditPage> {
 
   void _removeLabelAction() {
     if(widget.note.label != "") {
-      final newNote = Note(titleController.text, contentController.text, widget.note.isEditing, "");
+      final newNote = Note(titleController.text, contentController.text, widget.note.isEditing, "", 0xFFFFFFFF);
 
       Hive.box("note").putAt(widget.index, newNote);
 
@@ -320,7 +321,7 @@ class _EditPageState extends State<EditPage> {
         radioIndex = value;
         Navigator.pop(context);
 
-        final newNote = Note(titleController.text, contentController.text, widget.note.isEditing, label.label);
+        final newNote = Note(titleController.text, contentController.text, widget.note.isEditing, label.label, label.color);
         Hive.box("note").putAt(widget.index, newNote);
 
         Navigator.pushReplacement(
@@ -368,7 +369,7 @@ class _EditPageState extends State<EditPage> {
     if(widget.note.label != "") {
       return Container(
         margin: EdgeInsets.only(bottom: 5, left: 10),
-        decoration: style.containerDecoration(20, color: Colors.grey[600]),
+        decoration: style.containerDecoration(20, color: Color(widget.note.labelColor)),
         child: Padding(
           padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
           child: Text(widget.note.label, style: style.customStyle(19))
@@ -403,9 +404,9 @@ class _EditPageState extends State<EditPage> {
         Padding(
           padding: EdgeInsets.fromLTRB(0, 0, 15, 5),
           child: Text("Last updated: ${lastUpdated.hour}:"
-              "${lastUpdated.minute < 10 ? "0" : ""}"
-              "${lastUpdated.minute}",
-              style: style.customStyle(16)
+            "${lastUpdated.minute < 10 ? "0" : ""}"
+            "${lastUpdated.minute}",
+            style: style.customStyle(16)
           )
         )
       ]

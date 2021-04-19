@@ -18,15 +18,18 @@ class LabelAdapter extends TypeAdapter<Label> {
     };
     return Label(
       fields[0] as String,
+      fields[1] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, Label obj) {
     writer
-      ..writeByte(1)
+      ..writeByte(2)
       ..writeByte(0)
-      ..write(obj.label);
+      ..write(obj.label)
+      ..writeByte(1)
+      ..write(obj.color);
   }
 
   @override
