@@ -2,6 +2,8 @@
 
 Offline note taking app
 
+Google Play link: https://play.google.com/store/apps/details?id=com.notes.exo
+
 ## Implemented features
 - basic note keeper: - create a new note
                      - edit title and content of a new/existing note
