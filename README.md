@@ -11,6 +11,7 @@ Offline note taking app
 - implement drawer   
 - delete/undo functionality (partially)     
 - label notes
+- change label color
 
 ## TODO
 - change background color of individual notes
